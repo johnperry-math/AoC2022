@@ -3,3 +3,9 @@
 
 # Ada Library Information
 *.ali
+
+# Folders
+obj
+
+# Puzzle input file
+input.txt
