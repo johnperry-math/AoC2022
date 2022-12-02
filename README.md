@@ -1,6 +1,6 @@
 # AoC2022
 
-[Advent of Code 20222](https://adventofcode.com/2022). **In Ada, no less!**
+[Advent of Code 2022](https://adventofcode.com/2022). **In Ada, no less!**
 Because, after 2019 and 2020, I _still_ haven't learned my lesson.
 
 The elves are on an expedition for reindeer food.
