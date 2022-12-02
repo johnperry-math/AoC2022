@@ -10,3 +10,9 @@ The elves are on an expedition for reindeer food.
 Determine which elf/elves have the most calories, and report how many calories.
 Part 1 asks for the most calories carried by any one elf.
 Part 2 asks for the calories carried by the three elves with the most calories.
+
+# Day 2: Rock Paper Scissors
+
+An elf gives you a strategy guide for playing rock-paper-scissors.
+Part 1 has you score the strategy when you play it one way.
+Part 2 has you score the strategy when you play it another way.
