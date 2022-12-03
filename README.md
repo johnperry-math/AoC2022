@@ -32,8 +32,12 @@ Elves have common items in rucksacks.
   Fortunately, the groups are already grouped,
   and each group has only one common item.
 
-  I ended up solving this two different ways:
+  I ended up solving this three different ways:
   * In the first, I just searched through the strings.
   * In the second, I used hashed sets of characters to simplify the searching.
     It might be a little quicker, too, but the input is small,
     so I haven't bothered measuring it.
+  * In the third, I used an array of booleans indexed by a range of characters
+    that includes our desired character set.
+    This should be much quicker than the first two approaches,
+    though it took me a while to remember how to implement this properly.

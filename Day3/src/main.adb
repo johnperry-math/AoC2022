@@ -157,7 +157,7 @@ procedure Main is
 
       end loop;
 
-      ATIO.Put_Line("Priority sum is" & Priority_Sum'Image);
+      ATIO.Put_Line("Priority sum with a nested loop is" & Priority_Sum'Image);
       ATIO.Close(Input_File);
 
    end Prioritize_Items_Common_To_Groups_Of_Three;
@@ -183,7 +183,6 @@ procedure Main is
           Hash         => Hash_Character,
           Equivalent_Elements => "="
          );
-
 
    begin
 
@@ -227,15 +226,89 @@ procedure Main is
 
       end loop;
 
-      ATIO.Put_Line("Alternate priority sum is" & Priority_Sum'Image);
+      ATIO.Put_Line("...with hashed sets:" & Priority_Sum'Image);
       ATIO.Close(Input_File);
 
    end Alternate_Prioritize_Items_Common_To_Groups_Of_Three;
 
+   procedure Third_Prioritize_Items_Common_To_Groups_Of_Three is
+   -- find the item that appears in each group of three rucksacks,
+   -- sum the priorities of all these items
+   --
+   -- luckily, the rucksacks are already grouped;
+   -- I worried it would be more complicated than that
+   --
+   -- this version uses arrays, because I'm sick in my head, I guess
+
+      Priority_Sum: Natural := 0;
+
+   begin
+      ATIO.Open(Input_File, ATIO.In_File, Filename);
+
+      loop
+
+         declare
+
+            subtype Item_Range is Character range 'A' .. 'z';
+            -- this includes some characters we don't actually want,
+            -- but I'm not aware of how one might join two ranges as one
+            type Rucksack_Items is array( Item_Range ) of Boolean;
+
+            First_Rucksack: Rucksack_Items := ( others => False );
+            Second_Rucksack: Rucksack_Items := ( others => False );
+            Third_Rucksack: Rucksack_Items := ( others => False );
+
+            First: String := ATIO.Get_Line(Input_File);
+            Second: String := ATIO.Get_Line(Input_File);
+            Third : String := ATIO.Get_Line(Input_File);
+
+            Common_Item: Character;
+
+         begin
+
+            -- set up the hashed sets
+            for C of First loop
+               First_Rucksack(C) := True;
+            end loop;
+            for C of Second loop
+               Second_Rucksack(C) := True;
+            end loop;
+            for C of Third loop
+               Third_Rucksack(C) := True;
+            end loop;
+
+            -- even simpler than the rest!
+            for Item in Item_Range loop
+               if First_Rucksack(Item)
+                  and Second_Rucksack(Item)
+                  and Third_Rucksack(Item)
+               then
+                  Common_Item := Character(Item);
+                  exit;
+               end if;
+            end loop;
+
+            Priority_Sum := Priority_Sum + Priority(Common_Item);
+
+         end;
+
+         if ATIO.End_Of_File(Input_File) then exit; end if;
+
+      end loop;
+
+      ATIO.Put_Line("...with arrays:" & Priority_Sum'Image);
+      ATIO.Close(Input_File);
+
+   end Third_Prioritize_Items_Common_To_Groups_Of_Three;
+
 begin
 
+   ATIO.Put_Line("Part 1:");
    Prioritize_Items_In_Both_Compartments;
+
+   ATIO.Put_Line("Part 2:");
    Prioritize_Items_Common_To_Groups_Of_Three;
    Alternate_Prioritize_Items_Common_To_Groups_Of_Three;
+   Third_Prioritize_Items_Common_To_Groups_Of_Three;
 
 end Main;
