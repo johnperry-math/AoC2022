@@ -31,3 +31,9 @@ Elves have common items in rucksacks.
   common each each group of three rucksacks.
   Fortunately, the groups are already grouped,
   and each group has only one common item.
+
+  I ended up solving this two different ways:
+  * In the first, I just searched through the strings.
+  * In the second, I used hashed sets of characters to simplify the searching.
+    It might be a little quicker, too, but the input is small,
+    so I haven't bothered measuring it.
