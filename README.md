@@ -40,4 +40,4 @@ Elves have common items in rucksacks.
   * In the third, I used an array of booleans indexed by a range of characters
     that includes our desired character set.
     This should be much quicker than the first two approaches,
-    though it took me a while to remember how to implement this properly.
+    though it took a while to remember how to implement this properly.
