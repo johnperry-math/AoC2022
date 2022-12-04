@@ -41,3 +41,16 @@ Elves have common items in rucksacks.
     that includes our desired character set.
     This should be much quicker than the first two approaches,
     though it took a while to remember how to implement this properly.
+
+## Day 4: Camp Cleanup
+
+The elves get to work cleaning up their camp,
+but the work assignments have issues.
+* Part 1 has you identify which pairs of elves have redundant assignments;
+  that is, one elf has an assignment that encompasses the other's.
+* Part 2 has you identify which pairs of elves have overlapping assignments.
+
+I solved this first in Ada, and that was relatively quick.
+Then I decided to try adding SPARK to it, and that took some time.
+Eventually I got it to where correctness is proved, and
+one function (`Next_Number`) has interesting pre- and post-conditions.
