@@ -54,3 +54,30 @@ I solved this first in Ada, and that was relatively quick.
 Then I decided to try adding SPARK to it, and that took some time.
 Eventually I got it to where correctness is proved, and
 one function (`Next_Number`) has interesting pre- and post-conditions.
+
+## Day 5: Supply Stacks
+
+The elves have to load the ships,
+but they don't know how the crane will rearrange the crates.
+* Part 1 relies on the Crate Mover 9000,
+  which can move only one crate at a time.
+* Part 2 relies on the Crate Mover 9001,
+  which can move multiple crates at a time.
+
+This gave me an opportunity to refresh my memory on Ada's subprogram type;
+just define
+
+    type Crane is access procedure (Number, From, To: Positive);
+
+and then you can use the crane you like:
+
+    procedure Crate_Mover_9000(Number, From, To: Positive) is begin ... end;
+
+    procedure Crate_Mover_9001(Number, From, To: Positive) is begin ... end;
+
+    procedure Rearrange_Crates(Use_Crane: Crane) is
+    begin
+       ...
+               Use_Crane(Number_To_Move, From_Stack, To_Stack);
+       ...
+    end;
