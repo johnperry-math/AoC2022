@@ -77,7 +77,7 @@ procedure Main is
    -- crane behavior
    -- we define a crane type and two cranes of that type
 
-   type Crane is access procedure (Number, From, To: Positive);
+   type Crane is not null access procedure (Number, From, To: Positive);
 
    procedure Crate_Mover_9000(Number, From, To: Positive) is
    -- moves `Number` crates from `From` to `To`, one at a time
