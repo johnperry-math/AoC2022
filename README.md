@@ -82,7 +82,7 @@ and then you can use the crane you like:
        ...
     end;
 
-Day 6: Tuning Trouble
+## Day 6: Tuning Trouble
 
 The elves need to communicate, but one of their devices is broken.
 
