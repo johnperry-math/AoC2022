@@ -81,3 +81,17 @@ and then you can use the crane you like:
                Use_Crane(Number_To_Move, From_Stack, To_Stack);
        ...
     end;
+
+Day 6: Tuning Trouble
+
+The elves need to communicate, but one of their devices is broken.
+
+1. Write a subroutine that detects the beginning-of-message marker,
+   and outputs the character index where it ends.
+2. Write a subroutine that detects the beginning-of-message marker,
+   and outputs the character index where it ends.
+
+One can basically adapt the subroutine for part (1) to part (2).
+
+Since this was relatively straightforward, I adapted it to SPARK,
+but I didn't quite work out how to guarantee a postcondition for `Find_Marker`.
