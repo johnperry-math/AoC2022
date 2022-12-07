@@ -95,3 +95,20 @@ One can basically adapt the subroutine for part (1) to part (2).
 
 Since this was relatively straightforward, I adapted it to SPARK,
 but I didn't quite work out how to guarantee a postcondition for `Find_Marker`.
+
+## Day 7: No Space Left On Device
+
+The device is still broken. It needs an update, but... well, see the title.
+You have a command history of a minimal listing of the file system hierarchy.
+
+1. Identify the sums of the folders that are smaller than 100_000.
+2. Identify the smallest folder that is large enough
+   to free enough space on the device that you can install the update.
+
+I possibly overengineered this one, but I also got really held up on Part 1
+because
+* I misread the question, and then
+* I neglected to update all the folders; in particular,
+  the one(s) that contain the last files in the history.
+
+Once I finished Part 1, Part 2 was a snap.
