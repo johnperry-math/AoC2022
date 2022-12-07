@@ -181,6 +181,135 @@ procedure Main with SPARK_Mode => On is
 
    end Adjust_Size;
 
+   procedure Move_Into_Directory(Pos: in out FS_Trees.Cursor; Name: String) is
+   -- move `Pos` into the immediate subdirectory `Name`
+
+      use all type FS_Trees.Cursor;
+
+      Read_Name: FS_Name := ( others => ' ' );
+
+   begin
+
+      Read_Name(1..Name'Length) := Name;
+
+      -- find child; raise exception if not found
+      declare Child: FS_Trees.Cursor := FS_Trees.First_Child(Pos);
+      begin
+         while Child /= FS_Trees.No_Element loop
+            if FS_Trees.Element(Child).Name = Read_Name then
+               if FS_Trees.Element(Child).Kind = Folder then
+                  Pos := Child;
+                  exit;
+               else
+                  raise Cannot_Descend_Into_File
+                     with "at" & Line_Number'Image;
+               end if;
+            else
+               Child := FS_Trees.Next_Sibling(Child);
+            end if;
+         end loop;
+
+         if Child = FS_Trees.No_Element then
+            raise Unknown_Path with "at" & Line_Number'Image;
+         end if;
+
+      end;
+   end Move_Into_Directory;
+
+   procedure Append_Dir(Pos: FS_Trees.Cursor; Name: String) is
+   -- adds the directory named `Name` as a child of the folder at `Pos`
+      New_Record: FS_Record;
+      New_Name  : FS_Name := (others => ' ');
+   begin
+      New_Name(1 .. Name'Length) := Name;
+      New_Record.Name := New_Name;
+      New_Record.Kind := Folder;
+      New_Record.Size := 0;
+      FS_Tree.Append_Child(Pos, New_Record);
+   end Append_Dir;
+
+   procedure Append_File(Pos: FS_Trees.Cursor; Size_and_Name: String) is
+   -- adds the file whose size and name are recorded in `Size_and_Name`
+   -- as a child of the folder at `Pos`;
+   -- format of `Size_and_Name` should be "xxxxx yyyyy"
+   -- where "xxxxx" is a positive number and "yyyyy" is a valid filename
+      New_Record: FS_Record;
+      New_Name  : FS_Name := ( others => ' ' );
+      New_Size  : Natural;
+      Position  : Positive := 1;
+   begin
+      ATIIO.Get(Size_and_Name, New_Size, Position);
+      New_Name(1 .. Size_and_Name'Last - Position - 2 + 1)
+         := Size_and_Name(Position + 2 .. Size_and_Name'Last);
+      New_Record.Name := New_Name;
+      New_Record.Kind := File;
+      New_Record.Size := New_Size;
+      FS_Tree.Append_Child(Pos, New_Record);
+   end Append_File;
+
+   procedure List_Directory(Pos: in out FS_Trees.Cursor) is
+   -- list all the entries of `Pos`, assuming it's a directory;
+   -- if it's not, this raises the exception `Cannot_List_File`
+
+      use all type FS_Trees.Cursor;
+
+   begin
+
+      -- the following guard was unwarranted, but better safe than sorry
+      if FS_Trees.Element(Pos).Kind /= Folder then
+         raise Cannot_List_File;
+      end if;
+
+      declare
+         Next_Character: Character; -- for lookahead
+         Eol           : Boolean; -- for lookahead; not read, only written
+      begin
+
+         while not ATIO.End_Of_File(Input_File) loop
+
+            -- first determine if we are done: look for a command prompt
+            ATIO.Look_Ahead(Input_File, Next_Character, Eol);
+
+            if Next_Character = '$' then exit;
+            else
+
+               Line_Number := Line_Number + 1; -- useful during development
+               declare Filename: String := Atio.Get_Line(Input_File);
+               begin
+
+                  if Filename(1..3) = "dir" then -- directories begin w/"dir"
+                     Append_Dir(Pos, Filename(5..Filename'Length));
+
+                  elsif Filename(1) in '0'..'9' then -- files begin with size
+                     Append_File(Pos, Filename);
+
+                  else raise Unknown_File_Type; -- better safe than sorry
+
+                  end if;
+
+               end;
+
+            end if;
+
+         end loop;
+
+         -- this messed me up on Part 1
+         -- I was only updating directory sizes when I saw a "cd .."
+         -- but the last element(s) in the command history are files,
+         -- so their parent folders won't be updated
+         -- good example of "premature optimization is the root of all evil"
+         if ATIO.End_Of_File(Input_File) then
+            while Pos /= FS_Tree.Root and then FS_Trees.Element(Pos).Size = 0
+            loop
+               Adjust_Size(Pos);
+               Pos := FS_Trees.Parent(Pos);
+            end loop;
+         end if;
+
+      end;
+
+   end List_Directory;
+
    procedure Parse_Command(Pos: in out FS_Trees.Cursor) is
    -- parses a command from the history
 
@@ -215,31 +344,7 @@ procedure Main with SPARK_Mode => On is
 
          elsif Command(6) in 'a' .. 'z' then
             -- down into named folder
-            Read_Name(1 .. Command'Length - 6 + 1)
-               := Command(6 .. Command'Length);
-
-            -- find child; raise exception if not found
-            declare Child: FS_Trees.Cursor := FS_Trees.First_Child(Pos);
-            begin
-
-               while Child /= FS_Trees.No_Element loop
-                  if FS_Trees.Element(Child).Name = Read_Name then
-                     if FS_Trees.Element(Child).Kind = Folder then
-                        Pos := Child;
-                        exit;
-                     else
-                        raise Cannot_Descend_Into_File with "at" & Line_Number'Image;
-                     end if;
-                  else
-                     Child := FS_Trees.Next_Sibling(Child);
-                  end if;
-               end loop;
-
-               if Child = FS_Trees.No_Element then
-                  raise Unknown_Path with "at" & Line_Number'Image;
-               end if;
-
-            end;
+            Move_Into_Directory(Pos, Command(6..Command'Length));
 
          else
             raise Invalid_Cd_Path with Command(6..Command'Length);
@@ -248,82 +353,7 @@ procedure Main with SPARK_Mode => On is
 
       elsif Command(3..4) = "ls" then
          -- list directory entries; need to create children
-
-         -- the following guard was unwarranted, but better safe than sorry
-         if FS_Trees.Element(Pos).Kind /= Folder then
-            raise Cannot_List_File;
-         end if;
-
-         declare
-            Next_Character: Character; -- for lookahead
-            Eol           : Boolean; -- for lookahead; not read, only written
-         begin
-
-            while not ATIO.End_Of_File(Input_File) loop
-
-               -- first determine if we are done: look for a command prompt
-               ATIO.Look_Ahead(Input_File, Next_Character, Eol);
-
-               if Next_Character = '$' then exit;
-
-               else
-                  Line_Number := Line_Number + 1; -- useful during development
-                  declare Filename: String := Atio.Get_Line(Input_File);
-                  begin
-
-                     if Filename(1..3) = "dir" then -- directories begin w/"dir"
-                        declare
-                           New_Record: FS_Record;
-                           New_Name  : FS_Name := (others => ' ');
-                        begin
-                           New_Name(1 .. Filename'Length - 5 + 1)
-                              := Filename(5 .. Filename'Length);
-                           New_Record.Name := New_Name;
-                           New_Record.Kind := Folder;
-                           New_Record.Size := 0;
-                           FS_Tree.Append_Child(Pos, New_Record);
-                        end;
-
-                     elsif Filename(1) in '0'..'9' then -- files begin with size
-                        declare
-                           New_Record: FS_Record;
-                           New_Name  : FS_Name := ( others => ' ' );
-                           New_Size  : Natural;
-                           Position  : Positive := 1;
-                        begin
-                           ATIIO.Get(Filename, New_Size, Position);
-                           New_Name(1 .. Filename'Length - Position - 2 + 1)
-                              := Filename(Position + 2 .. Filename'Length);
-                           New_Record.Name := New_Name;
-                           New_Record.Kind := File;
-                           New_Record.Size := New_Size;
-                           FS_Tree.Append_Child(Pos, New_Record);
-                        end;
-
-                     else raise Unknown_File_Type; -- better safe than sorry
-
-                     end if;
-
-                  end;
-
-               end if;
-
-            end loop;
-
-            -- this messed me up on Part 1
-            -- I was only updating directory sizes when I saw a "cd .."
-            -- but the last element(s) in the command history are files,
-            -- so their parent folders won't be updated
-            -- good example of "premature optimization is the root of all evil"
-            if ATIO.End_Of_File(Input_File) then
-               while Pos /= FS_Tree.Root and then FS_Trees.Element(Pos).Size = 0
-               loop
-                  Adjust_Size(Pos);
-                  Pos := FS_Trees.Parent(Pos);
-               end loop;
-            end if;
-
-         end;
+         List_Directory(Pos);
 
       else raise Unknown_Command with "at" & Line_Number'Image;
          -- better safe than sorry!
