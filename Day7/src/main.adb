@@ -272,23 +272,18 @@ procedure Main with SPARK_Mode => On is
 
             if Next_Character = '$' then exit;
             else
-
                Line_Number := Line_Number + 1; -- useful during development
                declare Filename: String := Atio.Get_Line(Input_File);
                begin
 
                   if Filename(1..3) = "dir" then -- directories begin w/"dir"
                      Append_Dir(Pos, Filename(5..Filename'Length));
-
                   elsif Filename(1) in '0'..'9' then -- files begin with size
                      Append_File(Pos, Filename);
-
                   else raise Unknown_File_Type; -- better safe than sorry
-
                   end if;
 
                end;
-
             end if;
 
          end loop;
