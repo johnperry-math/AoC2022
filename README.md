@@ -112,3 +112,14 @@ because
   the one(s) that contain the last files in the history.
 
 Once I finished Part 1, Part 2 was a snap.
+
+## Day 8: Treetop Tree House
+
+The elves want to build a tree house.
+
+1. They want it to be hidden, so we have to count how many trees are visible.
+   (In my case, this turned out to be roughly 18%.)
+2. They want it to have a nice scenic view, defined as the product
+   of the number of trees visible in each cardinal direction.
+
+This could be converted to SPARK, but I don't want to stay up late tonight.

@@ -15,7 +15,7 @@
 with Ada.Text_IO;
 with Ada.Containers.Multiway_Trees;
 
-procedure Main with SPARK_Mode => On is
+procedure Main is
 
    -- SECTION
    -- input-related, part 1
