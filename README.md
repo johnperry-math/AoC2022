@@ -123,3 +123,15 @@ The elves want to build a tree house.
    of the number of trees visible in each cardinal direction.
 
 This could be converted to SPARK, but I don't want to stay up late tonight.
+
+## Day 9: Rope Bridge
+
+You're walking on a rope bridge when it does exactly what you'd expect.
+The tail(s) follow the head according to some fairly sensible rules.
+Determine how many unique positions the tail reaches when the rope has:
+
+1. 2 knots;
+2. 10 knots.
+
+Originally I wrote two separate functions,
+then condensed them into one function that solves both parts.
