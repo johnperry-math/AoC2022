@@ -35,7 +35,7 @@ procedure Main is
    end record;
 
    function Position_Hash(P: Position) return Ada.Containers.Hash_Type is
-      ( Ada.Containers.Hash_Type( P.X)
+      ( Ada.Containers.Hash_Type( abs(P.X) )
         * Ada.Containers.Hash_Type(32003)
         + Ada.Containers.Hash_Type( abs(P.Y) )
        );
@@ -200,7 +200,7 @@ begin
                  & " at least once"
                 );
 
-   ATIO.Put_Line("Two knots touch" & Num_Unique_Tail_Pos(10)'Image
+   ATIO.Put_Line("Ten knots touch" & Num_Unique_Tail_Pos(10)'Image
                  & " at least once"
                 );
 
