@@ -11,7 +11,7 @@
 
 with Ada.Text_IO;
 with Ada.Containers.Vectors;
-with Ada.Containers.Hashed_Sets;
+with Ada.Containers.Hashed_Sets; use all type Ada.Containers.Hash_Type;
 
 procedure Main is
 
@@ -35,7 +35,10 @@ procedure Main is
    end record;
 
    function Position_Hash(P: Position) return Ada.Containers.Hash_Type is
-      ( Ada.Containers.Hash_Type( abs(P.X * 32000 + P.Y )) );
+      ( Ada.Containers.Hash_Type( P.X)
+        * Ada.Containers.Hash_Type(32003)
+        + Ada.Containers.Hash_Type( abs(P.Y) )
+       );
 
    package Position_Sets is new Ada.Containers.Hashed_Sets
       ( Element_Type => Position, Hash => Position_Hash, Equivalent_Elements => "=" );
