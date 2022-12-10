@@ -9,3 +9,15 @@ obj
 
 # Puzzle input file
 input.txt
+
+# Example input files
+example*.txt
+
+# pdf files
+*.pdf
+
+# ppm files
+*.ppm
+
+#png files
+*.png

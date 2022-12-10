@@ -192,6 +192,47 @@ procedure Main is
 
    end Num_Unique_Tail_Pos;
 
+   procedure Write_Ppm is
+      Output_File  : ATIO.File_Type;
+      Max_X, Max_Y : Integer := Integer'First;
+      Min_X, Min_Y : Integer := Integer'Last;
+      Width, Height: Integer;
+   begin
+      for Position of Positions loop
+         Max_X := Integer'Max(Max_X, Position.X);
+         Min_X := Integer'Min(Min_X, Position.X);
+         Max_Y := Integer'Max(Max_Y, Position.Y);
+         Min_Y := Integer'Min(Min_Y, Position.Y);
+      end loop;
+      Width := Max_X - Min_X;
+      Height := Max_Y - Min_Y;
+      ATIO.Create(Output_File, Name =>"tail" & Positions.Length'Image & ".ppm");
+      ATIO.Put(Output_File, "P3");
+      ATIO.Put(Output_File, Natural'Image(Width + 1));
+      ATIO.Put(Output_File, Natural'Image(Height + 1));
+      ATIO.Put(Output_File, " 255"); -- max color
+      ATIO.New_Line(Output_File);
+      declare
+         Raster: array(0 .. Height + 1, 0 .. Width + 1 ) of Boolean := ( others => ( others => False ) );
+         Pts_Processed: Natural := 0;
+      begin
+         for Position of Positions loop
+            Raster(Position.Y - Min_Y, Position.X - Min_X) := True;
+         end loop;
+         for Row in 0 .. Height loop
+            for Col in 0 .. Width loop
+               ATIO.Put(Output_File, ( if Raster(Row,Col) then "0 " else "255 " ) );
+               ATIO.Put(Output_File, ( if Raster(Row,Col) then "0 " else "255 " ) );
+               ATIO.Put(Output_File, "255 ");
+               ATIO.New_Line(Output_File);
+               Pts_Processed := Pts_Processed + 1;
+            end loop;
+            ATIO.New_Line(Output_File);
+         end loop;
+      end;
+      ATIO.Close(Output_File);
+   end Write_Ppm;
+
 begin
 
    Read_Input;
@@ -200,8 +241,12 @@ begin
                  & " at least once"
                 );
 
+   Write_Ppm;
+
    ATIO.Put_Line("Ten knots touch" & Num_Unique_Tail_Pos(10)'Image
                  & " at least once"
                 );
+
+   Write_Ppm;
 
 end Main;
