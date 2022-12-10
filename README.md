@@ -135,3 +135,21 @@ Determine how many unique positions the tail reaches when the rope has:
 
 Originally I wrote two separate functions,
 then condensed them into one function that solves both parts.
+
+## Day 10: Cathode-Ray Tube
+
+Separate from the party, you end up in the water. (Thanks, former rope bridge!)
+Your communication device has video issues and you have to replace it.
+First, you have to figure out how it works.
+
+1. Determine the signal strength of a sequence of instructions.
+2. Determine the message these instructions should be drawing to the CPU.
+
+The solution in the repository is a bit different
+from the original, quick 'n dirty one.
+This one uses `Ada.Text_IO.Enumeration_IO` to simplify the reading
+and processing of instructions.
+I also corrected a few bugs that by sheer luck didn't affect the final solution.
+For instance, my original solution misplaced the CRT update,
+but by some miracle the only practical consequence was that
+it neglected to update the top-left pixel.
