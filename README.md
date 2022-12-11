@@ -168,8 +168,8 @@ which is the product of the two largest numbers of items a monkey inspects.
    scales the value by 1/3.
 2. Determine the number after 10,000 rounds.
    Your relief that the monkeys don't damage the items _is not rescaled_ by 1/3;
-   "you'll nedd to find another way to keep your worry levels manageable."
-   **LOL** A bit of number theory saves the day.
+   "you'll need to find another way to keep your worry levels manageable."
+   :laughing: A bit of number theory saves the day.
 
 The input was fairly small, so rather that write a parser
 I put the values directly into the records.
