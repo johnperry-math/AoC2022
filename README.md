@@ -153,3 +153,24 @@ I also corrected a few bugs that by sheer luck didn't affect the final solution.
 For instance, my original solution misplaced the CRT update,
 but by some miracle the only practical consequence was that
 it neglected to update the top-left pixel.
+
+## Day 11: Monkey in the Middle
+
+Some monkeys have grabbed your stuff, and are tossing items to each other.
+How they behave depends on how your interest in the item changes
+when they play with it.
+After a certain number of rounds,
+we can calculate the **level of monkey business**,
+which is the product of the two largest numbers of items a monkey inspects.
+
+1. Determine this number after twenty rounds.
+   Your relief that the monkeys don't damage the items
+   scales the value by 1/3.
+2. Determine the number after 10,000 rounds.
+   Your relief that the monkeys don't damage the items _is not rescaled_ by 1/3;
+   "you'll nedd to find another way to keep your worry levels manageable."
+   **LOL** A bit of number theory saves the day.
+
+The input was fairly small, so rather that write a parser
+I put the values directly into the records.
+Rather amazingly, I didn't make any typos!
