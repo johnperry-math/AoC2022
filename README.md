@@ -174,3 +174,11 @@ which is the product of the two largest numbers of items a monkey inspects.
 The input was fairly small, so rather that write a parser
 I put the values directly into the records.
 Rather amazingly, I didn't make any typos!
+
+## Day 12: Hill Climbing Algorithm
+
+1. Find the length of the shortest path from Start to End.
+2. Find the length of the shortest path from any ground-level point to End.
+
+I wasted entirely too much time trying to make this work with a depth-first
+algorithm.
