@@ -182,3 +182,18 @@ Rather amazingly, I didn't make any typos!
 
 I wasted entirely too much time trying to make this work with a depth-first
 algorithm.
+
+## Day 13: Distress Signal
+
+You try to contact the elves, but your communication device intercepts a signal.
+Unfortunately, the packets are out of order.
+
+1. Find the sum of the indices of the packets in the correct order.
+2. Add the guard packets `[[2]]` and `[[6]]`, sort the packets,
+   and determine the decoder key, which is the product of
+   the guard packets' indices.
+
+Premature optimization was the root of all evil once again,
+but once I worked out Part 1, Part 2 was pretty much a snap.
+
+1. Find the number of packets

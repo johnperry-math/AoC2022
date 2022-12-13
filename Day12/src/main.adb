@@ -10,6 +10,7 @@
 --
 
 with Ada.Text_IO;
+with Ada.Containers.Vectors;
 with Ada.Containers.Ordered_Sets;
 with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
@@ -31,7 +32,8 @@ procedure Main is
    subtype Elevation is Character range 'a' .. 'z';
    subtype Row_Range is Positive range 1 .. ( if Doing_Example then 5 else 41 );
    subtype Col_Range is Positive range 1 .. ( if Doing_Example then 8 else 161 );
-   Elevation_Map: array( Row_Range, Col_Range ) of Elevation;
+   type Elevation_Map_Array is array( Row_Range, Col_Range ) of Elevation;
+   Elevation_Map: Elevation_Map_Array;
 
    -- SUBSECTION
    -- my position
@@ -147,12 +149,17 @@ procedure Main is
        Element_Type => Position
       );
 
-   type Position_And_Distance is record
-      Where: Position;
-      Distance: Natural;
-   end record;
+   package Position_Vectors is new Ada.Containers.Vectors
+      (
+       Index_Type => Positive,
+       Element_Type => Position
+      );
 
-   function Find_Shortest_Route(Part: Part_Number := First) return Natural is
+   Did_Not_Find_Path: exception;
+
+   function Find_Shortest_Route(Part: Part_Number := First)
+                                return Position_Vectors.Vector
+   is
    -- uses breadth-first search to find the shortest route
    -- from the starting point to the ending point;
    -- determining the start and end depends on `Part`:
@@ -169,7 +176,7 @@ procedure Main is
       package Position_Queue_Interfaces
       is new Ada.Containers.Synchronized_Queue_Interfaces
          (
-          Element_Type => Position_And_Distance
+          Element_Type => Position_Vectors.Vector
          );
       package Position_Queues is new Ada.Containers.Unbounded_Synchronized_Queues
          (
@@ -178,38 +185,49 @@ procedure Main is
       Position_Queue: Position_Queues.Queue;
       -- positions we still want to explore
 
-      Current: Position_And_Distance;
-      -- current position
+      Current, Empty_Path: Position_Vectors.Vector;
+      -- current path
       Starting_Point: Position := ( if Part = First then Start else Apex );
       -- starting position; depends on which part!
 
    begin
 
+      Current.Append(Starting_Point);
       Explored.Insert(Starting_Point);
-      Position_Queue.Enqueue( ( Starting_Point, 0 ) );
+      Position_Queue.Enqueue(Current);
 
       while Position_Queue.Current_Use > 0 loop
 
          Position_Queue.Dequeue(Current);
+         --  Text_IO.Put_Line("exploring " & Current.Last_Element.Row'Image
+         --                   & Current.Last_Element.Col'Image);
 
-         if ( Part = First and then Current.Where = Apex )
+         if ( Part = First and then Current.Last_Element = Apex )
             or else
                ( Part = Second
-                  and then Elevation_Map(Current.Where.Row, Current.Where.Col) = 'a'
+                  and then
+                  Elevation_Map
+                     (Current.Last_Element.Row, Current.Last_Element.Col) = 'a'
                  )
          then -- found it!
-            return Current.Distance;
+            return Current;
 
          else -- keep looking, in each direction
             for Dir in Direction loop
                declare
-                  New_Pos: Position := New_Position(Current.Where, Dir);
+                  New_Pos: Position := New_Position(Current.Last_Element, Dir);
                begin
-                  if Good_Climb(Current.Where, New_Pos, Part) -- can we go here?
-                     and then not Explored.Contains(New_Pos)  -- did we already?
+                  -- can we go here? did we already?
+                  if Good_Climb(Current.Last_Element, New_Pos, Part)
+                     and then not Explored.Contains(New_Pos)
                   then
                      Explored.Insert(New_Pos);
-                     Position_Queue.Enqueue( ( New_Pos, Current.Distance + 1 ) );
+                     declare
+                        New_Path: Position_Vectors.Vector := Current.Copy;
+                     begin
+                        New_Path.Append(New_Pos);
+                        Position_Queue.Enqueue( New_Path );
+                     end;
                   end if;
                end;
             end loop;
@@ -217,19 +235,56 @@ procedure Main is
 
       end loop;
 
-      return Natural'Last;
+      raise Did_Not_Find_Path;
 
    end Find_Shortest_Route;
+
+   procedure Print_Map(Route: Position_Vectors.Vector) is
+      Temp: array( Elevation_Map_Array'Range(1), Elevation_Map_Array'Range(2) )
+         of Character := ( others => ( others => '.' ) );
+   begin
+      Temp(Route.Last_Element.Row, Route.Last_Element.Col) := 'E';
+      for I in Route.First_Index .. Route.Last_Index - 1 loop
+         declare
+            Current: Position := Route(I + 1);
+            Previous: Position := Route(I);
+         begin
+            if Current.Row > Previous.Row then
+               Temp(Previous.Row, Previous.Col) := 'v';
+            elsif Current.Row < Previous.Row then
+               Temp(Previous.Row, Previous.Col) := '^';
+            elsif Current.Col > Previous.Col then
+               Temp(Previous.Row, Previous.Col) := '>';
+            elsif Current.Col < Previous.Col then
+               Temp(Previous.Row, Previous.Col) := '<';
+            end if;
+         end;
+      end loop;
+      for row in Temp'Range(1) loop
+         for Col in Temp'Range(2) loop
+            Text_IO.Put(Temp(Row, Col));
+         end loop;
+         Text_IO.New_Line;
+      end loop;
+   end Print_Map;
+
+   Shortest_Route: Position_Vectors.Vector;
 
 begin
 
    Read_Map;
 
-   Text_IO.Put_Line("shortest route from start to apex takes"
-                    & Find_Shortest_Route'Image
-                   );
-   Text_IO.Put_Line("shortest route from apex to ground takes"
-                    & Find_Shortest_Route(Second)'Image
-                   );
+   Shortest_Route := Find_Shortest_Route;
+   --  Text_IO.Put_Line("shortest route from start to apex takes"
+   --                   & Natural'Image(Natural(Shortest_Route.Length) - 1)
+   --                  );
+   --  Print_Map(Shortest_Route);
+
+   Shortest_Route := Find_Shortest_Route(Second);
+   --  Shortest_Route.Reverse_Elements;
+   --  Text_IO.Put_Line("shortest route from ground to apex takes"
+   --                   & Natural'Image(Natural(Shortest_Route.Length) - 1)
+   --                  );
+   --  Print_Map(Shortest_Route);
 
 end Main;
