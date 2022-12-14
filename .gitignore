@@ -19,5 +19,8 @@ example*.txt
 # ppm files
 *.ppm
 
-#png files
+# png files
 *.png
+
+# jpg files
+*.jpg

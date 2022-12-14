@@ -196,4 +196,13 @@ Unfortunately, the packets are out of order.
 Premature optimization was the root of all evil once again,
 but once I worked out Part 1, Part 2 was pretty much a snap.
 
-1. Find the number of packets
+## Day 14: Regolith Reservoir
+
+In a cavern that is filling up with sand.
+
+1. Count the number of particles that fall
+   before they start falling into the void.
+2. Add a ledge. Count the number of particles that fall
+   before they pile up to the source.
+
+Pretty straightforward for once.
