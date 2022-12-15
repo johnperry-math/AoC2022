@@ -206,3 +206,24 @@ In a cavern that is filling up with sand.
    before they pile up to the source.
 
 Pretty straightforward for once.
+
+## Day 15: Beacon Exclusion Zone
+
+Send out sensors to try and detect the distress signal's location.
+They do, but none of the beacons you pick up is the one you want.
+
+1. Determine how many positions on row 2_000_000 cannot contain a beacon.
+2. Determine the one unique position in the 4_000_000-square box
+   cornered at the origin that no sensor can detect.
+
+Several things amaze me about Part 2.
+
+1. It can be solved! That's some amazing planning
+   to ensure there's only one position there that no sensor can detect.
+2. The solution I devised is about as fast as the solution to Part 1,
+   maybe faster. That's because I used a `HashedSet` in Part 1,
+   but there's no need to do that in Part 2.
+   This makes me suspect there's a way to do Part 1 much faster.
+3. I came up with a working solution to Part 2 on the first try.
+   (Modulo typos, of course.)
+

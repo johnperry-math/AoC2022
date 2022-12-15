@@ -239,6 +239,9 @@ procedure Main is
 
    end Find_Shortest_Route;
 
+   -- SECTION
+   -- more I/O
+
    procedure Print_Map(Route: Position_Vectors.Vector) is
       Temp: array( Elevation_Map_Array'Range(1), Elevation_Map_Array'Range(2) )
          of Character := ( others => ( others => '.' ) );
@@ -268,6 +271,55 @@ procedure Main is
       end loop;
    end Print_Map;
 
+   procedure Write_Ppm(Route: Position_Vectors.Vector; Part: Part_Number := First) is
+   -- writes the reservoir out as a ppm
+
+      Output_File  : Text_IO.File_Type;
+      Width, Height: Integer;
+
+   begin
+
+      Width := Elevation_Map'Last(2) - Elevation_Map'First(2);
+      Height := Elevation_Map'Last(1) - Elevation_Map'First(1);
+      Text_IO.Create(Output_File, Name =>"path_" & Part'Image & ".ppm");
+      Text_IO.Put(Output_File, "P3");
+      Text_IO.Put(Output_File, Natural'Image(Width + 1)); -- extra for last line
+      Text_IO.Put(Output_File, Natural'Image(Height + 1));-- extra for last line
+      Text_IO.Put(Output_File, " 255"); -- max color
+      Text_IO.New_Line(Output_File);
+
+      for Row in Elevation_Map_Array'Range(1) loop
+         for Col in Elevation_Map_Array'Range(2) loop
+            declare Ground_Value: Natural
+                  := Natural'Min(255,
+                                 ( Character'Pos(Elevation_Map(Row, Col))
+                                  - Character'Pos(Elevation'First) ) * 7 + 80
+                                );
+            begin
+               -- red
+               if Route.Contains((Row, Col)) and Part = First then
+                  Text_IO.Put(Output_File, "255");
+               else
+                  Text_IO.Put(Output_File, "0");
+               end if;
+               -- green
+               Text_IO.Put(Output_File, Ground_Value'Image);
+               -- blue
+               if Route.Contains((Row, Col)) and Part = Second then
+                  Text_IO.Put(Output_File, " 255");
+               else
+                  Text_IO.Put(Output_File, " 0");
+               end if;
+               Text_IO.New_Line(Output_File);
+            end;
+         end loop;
+         Text_IO.New_Line(Output_File);
+      end loop;
+
+      Text_IO.Close(Output_File);
+
+   end Write_Ppm;
+
    Shortest_Route: Position_Vectors.Vector;
 
 begin
@@ -275,16 +327,18 @@ begin
    Read_Map;
 
    Shortest_Route := Find_Shortest_Route;
-   --  Text_IO.Put_Line("shortest route from start to apex takes"
-   --                   & Natural'Image(Natural(Shortest_Route.Length) - 1)
-   --                  );
+   Text_IO.Put_Line("shortest route from start to apex takes"
+                    & Natural'Image(Natural(Shortest_Route.Length) - 1)
+                   );
    --  Print_Map(Shortest_Route);
+   Write_Ppm(Shortest_Route, First);
 
    Shortest_Route := Find_Shortest_Route(Second);
-   --  Shortest_Route.Reverse_Elements;
-   --  Text_IO.Put_Line("shortest route from ground to apex takes"
-   --                   & Natural'Image(Natural(Shortest_Route.Length) - 1)
-   --                  );
+   Shortest_Route.Reverse_Elements;
+   Text_IO.Put_Line("shortest route from ground to apex takes"
+                    & Natural'Image(Natural(Shortest_Route.Length) - 1)
+                   );
    --  Print_Map(Shortest_Route);
+   Write_Ppm(Shortest_Route, Second);
 
 end Main;
