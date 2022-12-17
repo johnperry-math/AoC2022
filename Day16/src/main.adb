@@ -15,6 +15,8 @@ with Ada.Text_IO;
 with Ada.Containers.Vectors;
 with Ada.Containers.Ordered_Sets;
 with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Hashed_Maps;
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
 
@@ -25,6 +27,8 @@ procedure Main is
    package Natural_IO is new Ada.Text_IO.Integer_IO ( Num => Natural );
 
    Doing_Example: constant Boolean := False;
+
+   type Part_Number is ( First, Second );
 
    -- SECTION
    -- global types and variables
@@ -72,7 +76,7 @@ procedure Main is
        Element_Type => Valve_Name_Vectors.Vector
       );
 
-   All_Valves: Valve_Name_Sets.Set;
+   All_Valves: Valve_Name_Vectors.Vector;
    Valve_Flows: Valve_Flow_Maps.Map;
    Valve_Tunnels: Valve_Tunnel_Maps.Map;
 
@@ -148,7 +152,7 @@ procedure Main is
             New_Valve.Name1 := Input_String(7);
             New_Valve.Name2 := Input_String(8);
 
-            All_Valves.Include(New_Valve);
+            All_Valves.Append(New_Valve);
 
             Pos := 24;
             Get_Integer(Input_String, Flow, Pos);
@@ -279,10 +283,7 @@ procedure Main is
       Travel_Time: Natural := Valve_Travel_Times(From)(Dest);
       Flow: Natural := Valve_Flows(Dest);
    begin
-      --  Text_IO.Put("expected value for "); Text_IO.Put(Dest.Name1); Text_IO.Put(Dest.Name2); Text_IO.New_Line;
-      --  Text_IO.Put_Line(Time'Image);
-      --  Text_IO.Put_Line(Flow'Image);
-      return ( Natural'Max(0, ( 30 - ( Current_Time + Travel_Time ) ) * Flow ) );
+      return ( Natural'Max(0, ( 30 - ( Current_Time + Travel_Time) ) * Flow ) );
    end;
 
    procedure Put_Path(Path: Valve_Name_Vectors.Vector) is
@@ -312,7 +313,7 @@ procedure Main is
    end Max_Benefit;
 
    function Flow_From
-      (From       : Valve_Name;
+      (From        : Valve_Name;
        Current_Time: Natural;
        Current_Flow: Natural;
        Currently_On: Valve_Name_Vectors.Vector
@@ -322,9 +323,8 @@ procedure Main is
       Result: Natural := Current_Flow;
       Last_Flow: Natural := 0;
    begin
-      --  Text_IO.Put("time" & Current_Time'Image & ", at ");
-      --  Text_IO.Put(From.Name1); Text_IO.Put(From.Name2); Text_IO.Put(": ");
-      --  Put_Path(Currently_On);
+      Text_IO.Put("time" & Current_Time'Image & ": ");
+      Put_Path(Currently_On);
       --  Put_Travel_Times(Valve_Travel_Times(From)); Text_IO.New_Line;
       for Dest of All_Valves loop
          if Valve_Flows(Dest) > 0
@@ -371,20 +371,116 @@ procedure Main is
       return Result;
    end Flow_From;
 
-   function Max_Pressure return Natural is
-      Position: Valve_Name := ( 'A', 'A' );
-      Currently_On: Valve_Name_Vectors.Vector;
+   type Both_Flows is record
+      H_Flow, E_Flow: Natural := 0;
+   end record;
+
+   function Flow_With_Elephant_From
+      (From, Elephant_From        : Valve_Name;
+       Current_Time, Elephant_Time: Natural;
+       Current_Flow, Elephant_Flow: Natural;
+       Currently_On, Elephant_On  : Valve_Name_Vectors.Vector
+      )
+       return Both_Flows
+   is
+      Result, Temp: Both_Flows;
+   begin
+      Result := ( Current_Flow, Elephant_Flow );
+      for Dest of All_Valves loop
+         if Valve_Flows(Dest) > 0
+            and then not Currently_On.Contains(Dest)
+            and then not Elephant_On.Contains(Dest)
+         then
+            declare
+               Next_On: Valve_Name_Vectors.Vector;
+            begin
+               if Current_Time <= Elephant_Time
+                  and then Current_Time + Valve_Travel_Times(From)(Dest) + 1 <= 30
+               then
+                  --  Put_Travel_Times(Valve_Travel_Times(From));
+                  Next_On := Currently_On;
+                  Next_On.Append(Dest);
+                  Temp := Flow_With_Elephant_From
+                     (Dest,
+                      Elephant_From,
+                      Current_Time + Valve_Travel_Times(From)(Dest) + 1,
+                      Elephant_Time,
+                      Current_Flow + Expected_Value(From, Dest, Current_Time),
+                      Elephant_Flow,
+                      Next_On,
+                      Elephant_On
+                     );
+                  if Temp.H_Flow + Temp.E_Flow > Result.H_Flow + Result.E_Flow
+                  then
+                     Result := Temp;
+                  end if;
+               elsif Elephant_Time + Valve_Travel_Times(Elephant_From)(Dest) + 1 <= 30
+               then
+                  Next_On := Elephant_On;
+                  Next_On.Append(Dest);
+                  --  Put_Travel_Times(Valve_Travel_Times(Elephant_From));
+                  Temp := Flow_With_Elephant_From
+                     (From,
+                      Dest,
+                      Current_Time,
+                      Elephant_Time + Valve_Travel_Times(Elephant_From)(Dest) + 1,
+                      Current_Flow,
+                      Elephant_Flow + Expected_Value(Elephant_From, Dest, Elephant_Time),
+                      Currently_On,
+                      Next_On
+                     );
+                  if Temp.H_Flow + Temp.E_Flow > Result.H_Flow + Result.E_Flow
+                  then
+                     Result := Temp;
+                  end if;
+                  --  Last_Flow := Result - Current_Flow;
+                  --  Text_IO.Put("result of ");
+                  --  Put_Path(Next_On);
+                  --  Text_IO.Put_Line(Result'Image);
+                  --  Text_IO.New_Line;
+                  --  Text_IO.Put(Natural'Image(Current_Flow + Expected_Value(From, Dest, Current_Time)));
+                  --  Text_IO.New_Line;
+                  --  else
+                  --     Text_IO.Put_Line("skipping because only expect"
+                  --                      & Max_Benefit(Dest, Currently_On, Current_Time)'image
+                  --                      & " compared to"
+                  --                      & Last_Flow'Image
+                  --                     );
+               end if;
+            end;
+         end if;
+      end loop;
+      return Result;
+   end Flow_With_Elephant_From;
+
+   function Max_Pressure(Part: Part_Number) return Natural is
+      Position                 : Valve_Name := ( 'A', 'A' );
+      Currently_On, Elephant_On: Valve_Name_Vectors.Vector;
+      Part_Two_Result: Both_Flows;
    begin
       Currently_On.Append(Position);
-      return Flow_From(Position, 1, 0, Currently_On);
+      Elephant_On.Append(Position);
+      if Part = First then return Flow_From(Position, 1, 0, Currently_On);
+      else Part_Two_Result := Flow_With_Elephant_From
+            (Position, Position, 5, 5, 0, 0, Currently_On, Elephant_On);
+         return Part_Two_Result.H_Flow + Part_Two_Result.E_Flow;
+      end if;
    end Max_Pressure;
+
+   function Greater_Flow(Left, Right: Valve_Name) return Boolean is
+      ( Valve_Flows(Left) > Valve_Flows(Right) );
+
+   package Sort_By_Flow is new Valve_Name_Vectors.Generic_Sorting
+      ( "<" => Greater_Flow );
 
 begin
 
    Read_Valves;
 
+   Sort_By_Flow.Sort(All_Valves);
+   --  Text_IO.Put_Line(All_Valves'Image);
    Setup_Travel_Times;
    Put_Travel_Times;
-   Text_IO.Put_Line("you can release at most" & Max_Pressure'Image);
+   Text_IO.Put_Line("you can release at most" & Max_Pressure(Second)'Image);
 
 end Main;

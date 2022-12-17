@@ -227,3 +227,22 @@ Several things amaze me about Part 2.
 3. I came up with a working solution to Part 2 on the first try.
    (Modulo typos, of course.)
 
+## Day 16: Proboscidea Volcanium
+
+1. Determine the route that most increases pressure.
+2. Do it with a volcano.
+
+My solution to part 1 took several tens of minutes.
+My solution to part 2 is ongoing after several hours.
+I don't quite understand why, as I read what others are doing,
+and I _think_ I'm doing the same thing, but they finish in seconds
+or even fractions of a second, while here I am... waiting... waiting...
+
+Not a fan of this one.
+
+## Pyroclastic Flow
+
+1. Count the height of a tower of falling rocks after one million turns.
+2. Repeat, but for one trillion turns.
+
+It's always a pleasure when I can put my mathematics degree to use.
