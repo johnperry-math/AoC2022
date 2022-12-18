@@ -257,9 +257,23 @@ is that an adaptation of BFS will work:
   but it may have been related to the fact that this time I took the remainder
   with `Ada.Containers.Hash_Type'Last`.
 
-## Pyroclastic Flow
+## Day 17: Pyroclastic Flow
 
 1. Count the height of a tower of falling rocks after one million turns.
 2. Repeat, but for one trillion turns.
 
 It's always a pleasure when I can put my mathematics degree to use.
+
+## Day 18: Boiling Boulders
+
+1. Count the number of exposed surfaces of cooled, coagulated drops of lava.
+2. Repeat, excluding interior pockets of air.
+
+This was a welcome relief from the last two excruciating days,
+in part because I was smart enough to:
+* perform a breadth-first search when determine which points are interior; and
+* start that search from the _exterior_,
+  determining the inside points only indirectly.
+
+I thought about doing it in SPARK, but I didn't want to implement a custom queue
+for the breadth-first search.

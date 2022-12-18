@@ -28,6 +28,9 @@ procedure Main is
    -- SECTION
    -- global types and variables
 
+   -- SUBSECTION
+   -- the types and varibles themselves
+
    type Grid_Range is new Integer range -1 .. 21;
 
    type Grid_Array is array( Grid_Range, Grid_Range, Grid_Range ) of Boolean;
@@ -35,35 +38,35 @@ procedure Main is
    Grid, Air_Bubble: Grid_Array
       := ( others => ( others => ( others => False ) ) );
 
+   type Position is record
+      X, Y, Z: Grid_Range;
+   end record;
+
+   type Position_Array is array(1 .. 6) of Position;
+
+   Directions: Position_Array
+      := ( ( 1, 0, 0 ), ( -1, 0, 0 ), ( 0, 1, 0 ), ( 0, -1, 0 ),
+           ( 0, 0, 1 ), ( 0, 0, -1 )
+          );
+
+   -- SUBSECTION
+   -- useful functions
+
+   function Valid_Move(Pos: Position; Dir: Position) return Boolean is
+      ( Pos.X + Dir.X in Grid_Range
+        and then Pos.Y + Dir.Y in Grid_Range
+        and then Pos.Z + Dir.Z in Grid_Range
+       );
+
    function Has_Lava(X, Y, Z: Grid_Range) return Boolean is ( Grid(X, Y, Z) );
 
    function Exposed_To_Interior(X, Y, Z: Grid_Range) return Boolean is
       ( Air_Bubble( X, Y, Z ) );
 
-   procedure Put_Grid(Which: Grid_Array) is
-      -- useful for debugging
-   begin
-      for X in Grid_Range loop
-         Text_IO.Put_Line(X'Image);
-         for Y in Grid_Range loop
-            for Z in Grid_Range loop
-               Text_IO.Put( ( if Which(X, Y, Z) then '#' else '.' ) );
-            end loop;
-            Text_IO.New_Line;
-         end loop;
-         Text_IO.New_Line(2);
-      end loop;
-   end;
-
    procedure Find_Interior is
    -- finds the interior(s) of the clump of lava,
    -- using a breadth-first search algorithm
    -- (HA HA, YOU DIDN'T FOOL ME INTO DEPTH-FIRST THIS TIME!!!)
-
-      type Position is record
-         X, Y, Z: Grid_Range;
-      end record;
-      -- the type we will enqueue for our BFS
 
       use all type Ada.Containers.Count_Type;
       package Bfs_Queue_Interfaces
@@ -96,60 +99,34 @@ procedure Main is
 
          declare
             Pos: Position;
-            X, Y, Z: Grid_Range;
          begin
 
             Queue.Dequeue(Pos);
-            X := Pos.X; Y := Pos.Y; Z := Pos.Z;
 
             -- check neighbors that are not diagonal
-            if X + 1 in Grid_Range and then not Checked(X + 1, Y, Z)
-               and then not Grid(X + 1, Y, Z)
-            then
-               Checked(X + 1, Y, Z) := True;
-               Air_Bubble(X + 1, Y, Z) := False;
-               Queue.Enqueue( ( X + 1, Y, Z ) );
-            end if;
+            for Dir of Directions loop
 
-            if X - 1 in Grid_Range and then not Checked(X - 1, Y, Z)
-               and then not Grid(X - 1, Y, Z)
-            then
-               Checked(X - 1, Y, Z) := True;
-               Air_Bubble(X - 1, Y, Z) := False;
-               Queue.Enqueue( ( X - 1, Y, Z ) );
-            end if;
+               if Valid_Move(Pos, Dir) then
 
-            if Y + 1 in Grid_Range and then not Checked(X, Y + 1, Z)
-               and then not Grid(X, Y + 1, Z)
-            then
-               Checked(X, Y + 1, Z) := True;
-               Air_Bubble(X, Y + 1, Z) := False;
-               Queue.Enqueue( ( X, Y + 1, Z ) );
-            end if;
+                  declare
+                     X: Grid_Range := Pos.X + Dir.X;
+                     Y: Grid_Range := Pos.Y + Dir.Y;
+                     Z: Grid_Range := Pos.Z + Dir.Z;
+                  begin
 
-            if Y - 1 in Grid_Range and then not Checked(X, Y - 1, Z)
-               and then not Grid(X, Y - 1, Z)
-            then
-               Checked(X, Y - 1, Z) := True;
-               Air_Bubble(X, Y - 1, Z) := False;
-               Queue.Enqueue( ( X, Y - 1, Z ) );
-            end if;
+                     if not Checked(X, Y, Z)
+                        and then not Grid(X, Y, Z)
+                     then
+                        Checked(X, Y, Z) := True;
+                        Air_Bubble(X, Y, Z) := False;
+                        Queue.Enqueue( ( X, Y, Z ) );
+                     end if;
+                  end;
 
-            if Z + 1 in Grid_Range and then not Checked(X, Y, Z + 1)
-               and then not Grid(X, Y, Z + 1)
-            then
-               Checked(X, Y, Z + 1) := True;
-               Air_Bubble(X, Y, Z + 1) := False;
-               Queue.Enqueue( ( X, Y, Z + 1 ) );
-            end if;
+               end if;
 
-            if Z - 1 in Grid_Range and then not Checked(X, Y, Z - 1)
-               and then not Grid(X, Y, Z - 1)
-            then
-               Checked(X, Y, Z - 1) := True;
-               Air_Bubble(X, Y, Z - 1) := False;
-               Queue.Enqueue( ( X, Y, Z - 1 ) );
-            end if;
+
+            end loop;
 
          end;
 
@@ -165,12 +142,11 @@ procedure Main is
    begin
 
       if Has_Lava(X, Y, Z) then -- don't bother if isn't a piece of lava
-         if not Has_Lava(X + 1, Y, Z) then Result := Result + 1; end if;
-         if not Has_Lava(X - 1, Y, Z) then Result := Result + 1; end if;
-         if not Has_Lava(X, Y + 1, Z) then Result := Result + 1; end if;
-         if not Has_Lava(X, Y - 1, Z) then Result := Result + 1; end if;
-         if not Has_Lava(X, Y, Z + 1) then Result := Result + 1; end if;
-         if not Has_Lava(X, Y, Z - 1) then Result := Result + 1; end if;
+         for Dir of Directions loop
+            if not Has_Lava(X + Dir.X, Y + Dir.Y, Z + Dir.Z) then
+               Result := Result + 1;
+            end if;
+         end loop;
       end if;
       return Result;
 
@@ -185,41 +161,15 @@ procedure Main is
 
       if Has_Lava(X, Y, Z) then -- don't bother if it isn't a piece of lava
 
-         if not Has_Lava(X + 1, Y, Z)
-            and not Exposed_To_Interior(X + 1, Y, Z)
-         then
-            Result := Result + 1;
-         end if;
+         for Dir of Directions loop
 
-         if not Has_Lava(X - 1, Y, Z)
-            and then not Exposed_To_Interior(X - 1, Y, Z)
-         then
-            Result := Result + 1;
-         end if;
+            if not Has_Lava(X + Dir.X, Y + Dir.Y, Z + Dir.Z)
+               and not Exposed_To_Interior(X + Dir.X, Y + Dir.Y, Z + Dir.Z)
+            then
+               Result := Result + 1;
+            end if;
 
-         if not Has_Lava(X, Y + 1, Z)
-            and then not Exposed_To_Interior(X, Y + 1, Z)
-         then
-            Result := Result + 1;
-         end if;
-
-         if not Has_Lava(X, Y - 1, Z)
-            and then not Exposed_To_Interior(X, Y - 1, Z)
-         then
-            Result := Result + 1;
-         end if;
-
-         if not Has_Lava(X, Y, Z + 1)
-            and then not Exposed_To_Interior(X, Y, Z + 1)
-         then
-            Result := Result + 1;
-         end if;
-
-         if not Has_Lava(X, Y, Z - 1)
-            and then not Exposed_To_Interior(X, Y, Z - 1)
-         then
-            Result := Result + 1;
-         end if;
+         end loop;
 
       end if;
 
@@ -283,6 +233,21 @@ procedure Main is
       Text_IO.Close(Input_File);
 
    end Read_Input;
+
+   procedure Put_Grid(Which: Grid_Array) is
+      -- useful for debugging
+   begin
+      for X in Grid_Range loop
+         Text_IO.Put_Line(X'Image);
+         for Y in Grid_Range loop
+            for Z in Grid_Range loop
+               Text_IO.Put( ( if Which(X, Y, Z) then '#' else '.' ) );
+            end loop;
+            Text_IO.New_Line;
+         end loop;
+         Text_IO.New_Line(2);
+      end loop;
+   end;
 
    -- SECTION
    -- PART 1
