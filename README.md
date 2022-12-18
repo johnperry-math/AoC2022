@@ -240,6 +240,23 @@ or even fractions of a second, while here I am... waiting... waiting...
 
 Not a fan of this one.
 
+### UPDATE
+
+Having a much more efficient solution to part 2 using breadth-first search.
+Basically, the next time I think a depth-first search should work,
+I should knock my head with something to set it straight. Seriously.
+
+I had thought of BFS, actually, but I dismissed it out of hand
+as having too many possible solutions.
+What I didn't realize, and learned only from looking at a Python solution,
+is that an adaptation of BFS will work:
+* Keep track of the valves turned on and their maximum flow,
+  _not_ the precise order you turned them on.
+* I had tried caching solutions for depth-first search, but various issues
+  kept cropping up. I'm still not sure what I was doing wrong before,
+  but it may have been related to the fact that this time I took the remainder
+  with `Ada.Containers.Hash_Type'Last`.
+
 ## Pyroclastic Flow
 
 1. Count the height of a tower of falling rocks after one million turns.

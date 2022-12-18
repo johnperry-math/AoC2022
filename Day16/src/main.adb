@@ -642,6 +642,7 @@ procedure Main is
       Path_Queue: Elephant_Queues.Queue;
       Empty_Set: Valve_Name_Sets.Set;
       Result    : Natural := 0;
+      Num_Scored: Natural := 0;
 
    begin
 
@@ -650,6 +651,7 @@ procedure Main is
                            Time_Remaining => 26,
                            Traversed => Empty_Set
                           ));
+      Paths.Include(Empty_Set, 0);
 
       Through_Queue: while Path_Queue.Current_Use > 0 loop
 
@@ -673,8 +675,7 @@ procedure Main is
             Text_IO.Put(' '); Put_Path_Set(Path.Traversed); Text_IO.New_Line;
 
             -- update with better flow
-            if not Paths.Contains(Path.Traversed)
-               or else Paths(Path.Traversed) < Path.Flow
+            if Paths(Path.Traversed) < Path.Flow
             then
                Paths.Include(Path.Traversed, Path.Flow);
             end if;
@@ -714,6 +715,7 @@ procedure Main is
                                      Traversed => New_Traversed
                                     )
                                   );
+               Paths.Include(New_Traversed, New_Flow);
 
             end loop Through_Good_Routes;
 
@@ -722,6 +724,10 @@ procedure Main is
       end loop Through_Queue;
 
       Text_IO.Put_Line("scoring" & Paths.Length'Image & " paths");
+      Text_IO.Put_Line("will have to make"
+                       & Natural'Image
+                          (Natural(Paths.Length) * Natural(Paths.Length))
+                       & "comparisons");
       for Path_Score_1 in Paths.Iterate loop
          for Path_Score_2 in Paths.Iterate loop
 
@@ -730,7 +736,6 @@ procedure Main is
                Flow1: Natural := Path_Score_Maps.Element(Path_Score_1);
                Path2: Valve_Name_Sets.Set := Path_Score_Maps.Key(Path_Score_2);
                Flow2: Natural := Path_Score_Maps.Element(Path_Score_2);
-               Num_Scored: Natural := 0;
             begin
 
                if not Intersects(Path1, Path2) then
@@ -738,8 +743,9 @@ procedure Main is
                end if;
 
                Num_Scored := Num_Scored + 1;
-               -- for some mysterious reason, this never prints...
-               if Num_Scored rem 100 = 0 then
+               -- if you saw the previous comment that was here,
+               -- you know how dumb I can be sometimes...
+               if Num_Scored rem 1000 = 0 then
                   Text_IO.Put_Line("compared" & Num_Scored'Image
                                    & " with" & Result'Image
                                    & " the best so far"
