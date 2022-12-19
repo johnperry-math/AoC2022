@@ -277,3 +277,16 @@ in part because I was smart enough to:
 
 I thought about doing it in SPARK, but I didn't want to implement a custom queue
 for the breadth-first search.
+
+## Day 19: Not Enough Minerals
+
+1. Determine the quality level for each blueprint
+   to build robots to mine minerals within 24 minutes.
+2. The same, but only the first three blueprints now, within 32 minutes.
+
+Breadth-first search works well here with the right optimization,
+and I had the right idea to use BFS, but not the right optimization.
+The puzzle is nice in principle, but the execution disappointed me.
+The example had two parts, but each took longer to solve than most parts
+of the actual input! It was also too complex to follow along when debugging.
+
