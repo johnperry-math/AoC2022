@@ -151,7 +151,7 @@ procedure Main is
    -- uses a breadth-first search to maximize the number of geodes mined
    -- in the given time limit
 
-      use all type Ada.Containers.Count_Type;
+      use type Ada.Containers.Count_Type;
 
       package Path_Queue_Interfaces
       is new Ada.Containers.Synchronized_Queue_Interfaces

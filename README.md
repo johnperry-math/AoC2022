@@ -290,3 +290,24 @@ The puzzle is nice in principle, but the execution disappointed me.
 The example had two parts, but each took longer to solve than most parts
 of the actual input! It was also too complex to follow along when debugging.
 
+## Day 20: Grove Positioning System
+
+1. Sort the values of a circular list according to their values.
+2. Repeat after multiplying the values by some ludicrously large number,
+   then sorting _10_ times instead of 1.
+
+I had one very good idea, one good idea,
+and a few bad ideas, including one very bad idea that held me up a long time.
+* The very good idea was to use modular arithmetic,
+  so as to minimize the motion:
+  no point in shifting a number around the list however many times.
+* The good idea was to ... well, I forgot.
+* One bad idea was to swap the value with the value at its final position,
+  which completely forgets the shift.
+* The very bad idea was to think that my list had to end each shift
+  with the same starting value as what the website showed.
+  I didn't think about the fact that, if it's a circular list,
+  all that matters is that the values are in the correct order.
+  This is especially true since you get your score
+  by counting from 0's position, and 0 is unique,
+  so it doesn't really matter which element is first.
