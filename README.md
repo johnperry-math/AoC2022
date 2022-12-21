@@ -319,3 +319,22 @@ I switched to using linked lists.
 The Ada library doesn't have a proper circular linked list,
 so it was a little tricky, but the result is more efficient,
 taking only about 2/3 as much time.
+
+## Day 21
+
+Monkey Math
+
+The monkeys are back, and they're yammering numbers or operations or something.
+
+1. Determine what number the `root` monkey will yammer once the other monkeys'
+   yammering makes their way up the chain.
+2. Oops: determine what number **you** have to yammer so that the `root` monkey
+   hears equal values from the two yammering at it.
+
+I rather liked this one, despite getting Part 2 wrong the first time.
+I had the right idea both times: recursion on both parts,
+and making my way _down_ the chain of yammering monkeys,
+"undoing" whatever they did along the way.
+However, I wasn't sufficiently careful about rewriting subtraction and division,
+as they aren't commutative.
+(Some mathematician _I_ am...)
