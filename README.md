@@ -311,3 +311,11 @@ and a few bad ideas, including one very bad idea that held me up a long time.
   This is especially true since you get your score
   by counting from 0's position, and 0 is unique,
   so it doesn't really matter which element is first.
+
+### Updated
+
+Based on discussion with others at forum.ada-lang.io,
+I switched to using linked lists.
+The Ada library doesn't have a proper circular linked list,
+so it was a little tricky, but the result is more efficient,
+taking only about 2/3 as much time.

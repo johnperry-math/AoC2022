@@ -12,7 +12,7 @@
 pragma Ada_2022;
 
 with Ada.Text_IO;
-with Ada.Containers.Vectors;
+with Ada.Containers.Doubly_Linked_Lists;
 
 procedure Main is
 
@@ -27,13 +27,12 @@ procedure Main is
    -- SECTION
    -- global types and variables
 
-   package Integer_Lists is new Ada.Containers.Vectors
+   package Integer_Lists is new Ada.Containers.Doubly_Linked_Lists
       (
-       Index_Type => Positive,
        Element_Type => Integer
       );
 
-   Input_List: Integer_Lists.Vector;
+   Input_List: Integer_Lists.List;
 
    -- SECTION
    -- I/O
@@ -89,21 +88,16 @@ procedure Main is
 
    end Read_Input;
 
-   procedure Put_Reordered_List(Original, Positions: Integer_Lists.Vector) is
-   -- I attacked today's puzzle using two lists; the original, and
-   -- another list that contained the elements' new positions; that is,
-   -- Positions(I) tells me the new index of Original(I)
-   -- this procedure prints out the resulting list,
-   -- and was useful for debugging
+   procedure Put_List(List: Integer_Lists.List) is
 
    begin
 
-      for I in 1 .. Positive(Original.Length) loop
-         Text_IO.Put(" " & Integer'Image(Original(Positions(I))));
+      for E of List loop
+         Text_IO.Put(" " & E'Image);
       end loop;
       Text_IO.New_Line;
 
-   end Put_Reordered_List;
+   end Put_List;
 
    -- SECTION
    -- PART 1
@@ -115,84 +109,99 @@ procedure Main is
    -- of the final list
 
       use type Ada.Containers.Count_Type;
+      use type Integer_Lists.Cursor;
 
       Result       : Integer := 0;
-      Position_List: Integer_Lists.Vector;
+      New_List: Integer_Lists.List;
+      Position_List: array(1 .. Input_List.Length) of Integer_Lists.Cursor;
+      Cursor: Integer_Lists.Cursor;
+      I: Ada.Containers.Count_Type := 1;
 
    begin
 
       -- set up the position list
-      Position_List.Set_Length(Position_List.Length);
-      for I in 1 .. Positive(Input_List.Length) loop
-         Position_List.Append(I);
+      Cursor := Input_List.First;
+      while Cursor /= Integer_Lists.No_Element loop
+         New_List.Append(Integer_Lists.Element(Cursor));
+         Position_List(I) := New_List.Last;
+         I := I + 1;
+         Integer_Lists.Next(Cursor);
       end loop;
 
       -- reorder it
-      Through_Values: for K in 1 .. Positive(Position_List.Length) loop
+      Through_Values: for K in Position_List'First .. Position_List'Last loop
 
          -- if the value at position k is larger than the list's length,
          -- there's no point cycling around however many times;
          -- might as well work out the resulting position after all those cycles
 
+         Cursor := Position_List(K);
+
          declare
-            Value     : Integer := Input_List(K); -- item to move
-            I, J      : Natural := Position_List.Find_Index(K); -- current loc'n
+            Value: Integer := Integer_Lists.Element(Cursor);
+            Move_Left: Boolean := Value < 0;
+            New_Cursor: Integer_Lists.Cursor;
             Net_Motion: Integer := abs(Value) rem
-               Positive( Position_List.Length - 1 ); -- how far it moves
+               ( Positive(Position_List'Length) - 1 ); -- how far it moves
 
          begin
 
-            -- if the value goes past the end of the list,
-            -- it will be a lot easier to handle it as motion
-            -- in the opposite direction
-
-            if Value > 0 and then Net_Motion >= (Positive(Position_List.Length))
-            then
-               Net_Motion := Positive(Position_List.Length) - Net_Motion - 1;
-               Value := -Value;
-
-            elsif Value < 0 and then Net_Motion + 1 >= I then
-               Net_Motion := Positive(Position_List.Length) - Net_Motion - 1;
-               Value := -Value;
-
+            if Move_Left then
+               if Cursor = New_List.First then
+                  New_Cursor := New_List.Last;
+               else
+                  New_Cursor := Integer_Lists.Previous(Cursor);
+               end if;
+               Net_Motion := Net_Motion - 1;
+            else
+               if Cursor = New_List.Last then
+                  New_Cursor := New_List.First;
+               else
+                  New_Cursor := Integer_Lists.Next(Cursor);
+               end if;
             end if;
+
+            New_List.Delete(Cursor);
 
             -- perform the shift
 
-            Through_Shift: for L in 1 .. abs(Net_Motion) loop
+            Through_Shift: for L in 1 .. Net_Motion loop
 
-               if Value < 0 then
-                  J := J - 1;
-                  if J = 1 then J := Positive( Position_List.Length ); end if;
-                  Position_List.Swap(I, J);
-                  I := J;
+               if Move_Left then
+                  if New_Cursor = New_List.First then
+                     New_Cursor := New_List.Last;
+                  else
+                     Integer_Lists.Previous(New_Cursor);
+                  end if;
 
                else
-                  J := J + 1;
-                  if J > Positive( Position_List.Length ) then J := 1; end if;
-                  Position_List.Swap(I, J);
-                  I := J;
+                  if New_Cursor = New_List.Last then
+                     New_Cursor := New_List.First;
+                  else
+                     Integer_Lists.Next(New_Cursor);
+                  end if;
 
                end if;
 
             end loop Through_Shift;
+
+            New_List.Insert(New_Cursor, Value);
 
          end;
 
       end loop Through_Values;
 
       declare
-         K: Positive := Input_List.Find_Index(0);
-         J: Positive := Position_List.Find_Index(K);
+         C: Integer_Lists.Cursor := New_List.Find(0);
       begin
 
          for I in 1 .. 3000 loop
-            J := J + 1;
+            if C = New_List.Last then C := New_List.First;
+            else Integer_Lists.Next(C);
+            end if;
             if I rem 1000 = 0 then
-               Result := Result
-                  + Input_List(Position_List
-                               (J rem Positive(Position_List.Length))
-                              );
+               --  Text_IO.Put_Line(Integer_Lists.Element(C)'image);
+               Result := Result + New_List(C);
             end if;
          end loop;
 
@@ -221,94 +230,112 @@ procedure Main is
    -- (c) the result is (probably) a Long_Long_Integer anyway,
    --     so I can't avoid it even then
 
-      use type Ada.Containers.Count_Type;
-
       Key: constant Long_Long_Integer := 811589153;
 
-      package Long_Integer_Lists is new Ada.Containers.Vectors
-            ( Index_Type => Positive,
-              Element_Type => Long_Long_Integer
+      package Long_Integer_Lists is new Ada.Containers.Doubly_Linked_Lists
+            ( Element_Type => Long_Long_Integer
              );
 
+      use type Integer_Lists.Cursor;
+      use type Ada.Containers.Count_Type;
+      use type Long_Integer_Lists.Cursor;
+
       Result       : Long_Long_Integer := 0;
-      Long_List    : Long_Integer_Lists.Vector;
-      Position_List: Integer_Lists.Vector;
+      New_List     : Long_Integer_Lists.List;
+      Position_List: array(1 .. Input_List.Length) of Long_Integer_Lists.Cursor;
+      Cursor       : Integer_Lists.Cursor;
+      Long_Cursor  : Long_Integer_Lists.Cursor;
+      I            : Ada.Containers.Count_Type := 1;
 
    begin
 
-      -- set up the position list
-      Position_List.Set_Length(Position_List.Length);
-      for I in 1 .. Positive(Input_List.Length) loop
-         Position_List.Append(I);
-         -- if I tried Long_Long_Integer( Input_List.Element(I) * Key ),
-         -- gnat complained about an ambiguous name or some such nonsense
-         declare New_Entry: Long_Long_Integer
-               := Long_Long_Integer( Input_List.Element(I) );
-         begin
-            Long_List.Append( New_Entry * Key );
-         end;
+      -- set up the lists
+      Cursor := Input_List.First;
+      while Cursor /= Integer_Lists.No_Element loop
+         New_List.Append(Long_Long_Integer(Integer_Lists.Element(Cursor)) * Key);
+         Position_List(I) := New_List.Last;
+         I := I + 1;
+         Integer_Lists.Next(Cursor);
       end loop;
 
       Loop_10: for Each in 1 .. 10 loop
 
-         Through_Shift: for K in 1 .. Positive(Position_List.Length) loop
+         -- reorder it
+         Through_Values: for K in Position_List'First .. Position_List'Last loop
+
+            -- if the value at position k is larger than the list's length,
+            -- there's no point cycling around however many times;
+            -- might as well work out the resulting position after all those cycles
+
+            Long_Cursor := Position_List(K);
 
             declare
-               Value     : Long_Long_Integer := Long_List(K);
-               I, J      : Natural := Position_List.Find_Index(K);
+               Value     : Long_Long_Integer
+                  := Long_Integer_Lists.Element(Long_Cursor);
+               Move_Left : Boolean := Value < 0;
+               New_Cursor: Long_Integer_Lists.Cursor;
                Net_Motion: Long_Long_Integer := abs(Value) rem
-                  Long_Long_Integer( Position_List.Length - 1 );
+                  ( Long_Long_Integer(Position_List'Length) - 1 ); -- how far it moves
+
             begin
 
-               if Value > 0
-                  and then Net_Motion >= Long_Long_Integer(Position_List.Length)
-               then
-                  Net_Motion := Long_Long_Integer(Position_List.Length)
-                     - Net_Motion - 1;
-                  Value := -Value;
-
-               elsif Value < 0 and then Net_Motion + 1 >= Long_Long_Integer(I) then
-                  Net_Motion := Long_Long_Integer(Position_List.Length)
-                     - Net_Motion - 1;
-                  Value := -Value;
-
+               if Move_Left then
+                  if Long_Cursor = New_List.First then
+                     New_Cursor := New_List.Last;
+                  else
+                     New_Cursor := Long_Integer_Lists.Previous(Long_Cursor);
+                  end if;
+                  Net_Motion := Net_Motion - 1;
+               else
+                  if Long_Cursor = New_List.Last then
+                     New_Cursor := New_List.First;
+                  else
+                     New_Cursor := Long_Integer_Lists.Next(Long_Cursor);
+                  end if;
                end if;
 
-               Through_Values: for L in 1 .. abs(Net_Motion) loop
+               New_List.Delete(Long_Cursor);
 
-                  if Value < 0 then
-                     J := J - 1;
-                     if J = 1 then J := Positive( Position_List.Length ); end if;
-                     Position_List.Swap(I, J);
-                     I := J;
+               -- perform the shift
+
+               Through_Shift: for L in 1 .. Net_Motion loop
+
+                  if Move_Left then
+                     if New_Cursor = New_List.First then
+                        New_Cursor := New_List.Last;
+                     else
+                        Long_Integer_Lists.Previous(New_Cursor);
+                     end if;
 
                   else
-                     J := J + 1;
-                     if J > Positive( Position_List.Length ) then J := 1; end if;
-                     Position_List.Swap(I, J);
-                     I := J;
+                     if New_Cursor = New_List.Last then
+                        New_Cursor := New_List.First;
+                     else
+                        Long_Integer_Lists.Next(New_Cursor);
+                     end if;
 
                   end if;
 
-               end loop Through_Values;
+               end loop Through_Shift;
+
+               New_List.Insert(New_Cursor, Value);
 
             end;
 
-         end loop Through_Shift;
+         end loop Through_Values;
 
       end loop Loop_10;
 
       declare
-         K: Positive := Long_List.Find_Index(0);
-         J: Positive := Position_List.Find_Index(K);
+         C: Long_Integer_Lists.Cursor := New_List.Find(0);
       begin
 
          for I in 1 .. 3000 loop
-            J := J + 1;
+            if C = New_List.Last then C := New_List.First;
+            else Long_Integer_Lists.Next(C);
+            end if;
             if I rem 1000 = 0 then
-               --  Text_IO.Put_Line(J'Image & Natural'Image(J rem Positive(Position_List.Length)));
-               --  Text_IO.Put_Line(Integer'Image(Long_List(Position_List(J rem Positive(Position_List.Length)))));
-               Result := Result + Long_List(Position_List(J rem Positive(Position_List.Length)));
+               Result := Result + New_List(C);
             end if;
          end loop;
 
