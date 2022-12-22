@@ -183,6 +183,12 @@ Rather amazingly, I didn't make any typos!
 I wasted entirely too much time trying to make this work with a depth-first
 algorithm.
 
+Zertovitch generated a neat visualization of the paths taken, so I did, too.
+
+![<img src="Day12/path_FIRST.jpg" width="400"](Day12/path_FIRST.jpg)
+
+![<img src="Day12/path_FIRST.jpg" width="400"](Day12/path_SECOND.jpg)
+
 ## Day 13: Distress Signal
 
 You try to contact the elves, but your communication device intercepts a signal.
@@ -206,6 +212,13 @@ In a cavern that is filling up with sand.
    before they pile up to the source.
 
 Pretty straightforward for once.
+
+Someone generated a neat visualization of the piles generated,
+so I did, too.
+
+![<img src="Day14/pile_FIRST.jpg" width="400"](Day14/pile_FIRST.jpg)
+
+![<img src="Day14/pile_SECOND.jpg" width="400"](Day14/pile_SECOND.jpg)
 
 ## Day 15: Beacon Exclusion Zone
 
@@ -361,3 +374,7 @@ I made a physical cube to help me work out the wrapping rules!
 So it was fun _even though it took _a long time._ :grin:
 
 ![the cube](Day_22_cube.png)
+
+I tried generating interesting output,
+but the path is too long, and even animating them didn't help much.
+If you really want to see them, look at the animations in the `Day22` folder.
