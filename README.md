@@ -185,9 +185,9 @@ algorithm.
 
 Zertovitch generated a neat visualization of the paths taken, so I did, too.
 
-![<img src="Day12/path_FIRST.jpg" width="400"](Day12/path_FIRST.jpg)
+[<img src="Day12/path_FIRST.jpg" width="600">](Day12/path_FIRST.jpg)
 
-![<img src="Day12/path_FIRST.jpg" width="400"](Day12/path_SECOND.jpg)
+[<img src="Day12/path_FIRST.jpg" width="600">](Day12/path_SECOND.jpg)
 
 ## Day 13: Distress Signal
 
@@ -216,9 +216,9 @@ Pretty straightforward for once.
 Someone generated a neat visualization of the piles generated,
 so I did, too.
 
-![<img src="Day14/pile_FIRST.jpg" width="400"](Day14/pile_FIRST.jpg)
+[<img src="Day14/pile_FIRST.jpg" width="400">](Day14/pile_FIRST.jpg)
 
-![<img src="Day14/pile_SECOND.jpg" width="400"](Day14/pile_SECOND.jpg)
+[<img src="Day14/pile_SECOND.jpg" width="600">](Day14/pile_SECOND.jpg)
 
 ## Day 15: Beacon Exclusion Zone
 
