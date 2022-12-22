@@ -320,9 +320,7 @@ The Ada library doesn't have a proper circular linked list,
 so it was a little tricky, but the result is more efficient,
 taking only about 2/3 as much time.
 
-## Day 21
-
-Monkey Math
+## Day 21: Monkey Math
 
 The monkeys are back, and they're yammering numbers or operations or something.
 
@@ -338,3 +336,28 @@ and making my way _down_ the chain of yammering monkeys,
 However, I wasn't sufficiently careful about rewriting subtraction and division,
 as they aren't commutative.
 (Some mathematician _I_ am...)
+
+## Day 22: Monkey Map
+
+Monkeys again. _(sigh)_
+They have a map that should help you find the password that unlocks a device
+that will help you get around a force field.
+They also have instructions that tell you how to get around the map.
+You can't move through walls, and you have to observe some wrap-around rules.
+
+1. Ordinary wrap-around.
+2. Turns out your funny-shaped map **is a cube**, so wrap around the cube.
+
+This was fun, even though I got each part wrong at least once.
+Even the debugging wasn't too bad. The two problems I had in Part 2 were:
+* I forgot to change the orientation when we wrap around the cube; and
+* I was unaware, or else had forgotten that an `out` variable in Ada
+  _does not_ have to retain a pre-existing value of the supplied parameter.
+  I'm surprised that it didn't even warn me about not having initialized
+  the `out` parameter `Facing` on every possible branch of the `Wrap_*_Cube`
+  procedures.
+
+I made a physical cube to help me work out the wrapping rules!
+So it was fun _even though it took _a long time._ :grin:
+
+![the cube](Day_22_cube.png)
