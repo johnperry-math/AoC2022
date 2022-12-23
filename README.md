@@ -378,3 +378,17 @@ So it was fun _even though it took _a long time._ :grin:
 I tried generating interesting output,
 but the path is too long, and even animating them didn't help much.
 If you really want to see them, look at the animations in the `Day22` folder.
+
+### Update
+
+I found a way to improve the visualization; here they are.
+They're scaled down here, so open the original images for a better view.
+But you can already see how the wraparound works.
+
+#### Part 1
+
+[<img src="Day22/part1.gif" width="200">](Day22/part1.gif)
+
+#### Part 2
+
+[<img src="Day22/part2.gif" width="200">](Day22/part2.gif)
