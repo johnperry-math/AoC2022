@@ -405,3 +405,11 @@ They follow a complicated set of rules to do this.
 
 Another fun one!
 Not perhaps the most space-efficient solution, but it gets the job done!
+
+### Visualization
+
+The visualization is quite interesting
+(why does there seem to be a bias to spread toward the southeast?)
+but the file is unfortunately large: close to 4MB.
+
+[<img src="Day23/part2.gif">](Day23/part2.gif)
