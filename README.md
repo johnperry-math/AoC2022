@@ -392,3 +392,16 @@ But you can already see how the wraparound works.
 #### Part 2
 
 [<img src="Day22/part2.gif" width="200">](Day22/part2.gif)
+
+## Day 23: Unstable Diffusion
+
+You finally meet back up with the elves.
+They decide to spread out, so as to plant star seedlings far and wide.
+They follow a complicated set of rules to do this.
+
+1. Determine the number of empty spaces in the smallest rectangle
+   that contains all the elves after 10 rounds.
+2. Determine how many rounds it takes to achieve equilibrium.
+
+Another fun one!
+Not perhaps the most space-efficient solution, but it gets the job done!
