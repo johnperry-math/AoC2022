@@ -23,6 +23,10 @@ procedure Main is
 
    Doing_Example: constant Boolean := False;
 
+   Compute_Bounds: constant Boolean := False;
+
+   Write_Imagery: constant Boolean := False;
+
    type Part_Number is ( First, Second );
 
    -- SECTION
@@ -33,12 +37,8 @@ procedure Main is
 
    Rounds: constant Positive := ( if Doing_Example then 30 else 1000 );
 
-   subtype Row_Range
-      is Integer range -Rounds .. ( if Doing_Example then 7 + Rounds
-                                    else 70 + Rounds );
-   subtype Col_Range
-      is Integer range -Rounds .. ( if Doing_Example then 7 + Rounds
-                                    else 70 + Rounds );
+   subtype Row_Range is Integer range -15 .. 125;
+   subtype Col_Range is Integer range -15 .. 125;
 
    -- SUBSECTION
    -- elves
@@ -206,17 +206,20 @@ procedure Main is
    procedure Read_Input is
    -- read the map, set up the elves
 
+      Row_Max: constant Natural := ( if Doing_Example then 7 else 70 );
+      Col_Max: constant Natural := ( if Doing_Example then 7 else 70 );
+
    begin
 
       Text_IO.Open(Input_File, Text_IO.In_File, Filename);
 
-      for Row in 1 .. Row_Range'Last - Rounds loop
+      for Row in 1 .. Row_Max loop
 
          declare
             Input_String: String := Text_IO.Get_Line(Input_File);
          begin
 
-            for Col in 1 .. Col_Range'Last - Rounds loop
+            for Col in 1 .. Col_Max loop
                if Input_String(Col) = '.' then
                   Map(Row, Col) := Fill_Space;
                else
@@ -248,6 +251,88 @@ procedure Main is
 
    end Put_Map;
 
+   Min_Row: Integer := Row_Range'Last;
+   Max_Row: Integer := Row_Range'First;
+   Min_Col: Integer := Col_Range'Last;
+   Max_Col: Integer := Col_Range'First;
+
+   procedure Put_Elf_Bounds is
+   begin
+
+      for Row in Row_Range loop
+         if ( for some Col in Col_Range => Map(Row, Col) = Fill_Elf ) then
+            Min_Row := Row_Range'Min(Min_Row, Row);
+            Max_Row := Row_Range'Max(Max_Row, Row);
+         end if;
+      end loop;
+
+      -- now cols
+      for Col in Col_Range loop
+         if ( for some Row in Row_Range => Map(Row, Col) = Fill_Elf ) then
+            Min_Col := Col_Range'Min(Min_Col, Col);
+            Max_Col := Col_Range'Max(Max_Col, Col);
+         end if;
+      end loop;
+
+   end Put_Elf_Bounds;
+
+
+   procedure Write_Map_As_Ppm(Round: Natural) is
+   --writes the map of elves out to a ppm
+
+      Output_File  : Text_IO.File_Type;
+      Tmp_Suffix   : String := Round'Image;
+      Suffix       : array (1..4) of Character := ( others => '0' );
+
+      type Pixel is record
+         Red, Green, Blue: Natural;
+      end record;
+
+      Ash_Pixel : Pixel := ( Red | Green | Blue => 128 );
+      Elf_Pixel : Pixel := ( Red | Blue => 64, Green => 192 );
+
+   begin
+
+      if Round < 10 then
+         Suffix(4) := Tmp_Suffix(2);
+      elsif Round < 100 then
+         Suffix(3) := Tmp_Suffix(2);
+         Suffix(4) := Tmp_Suffix(3);
+      else
+         for I in 2..4 loop
+            Suffix(I) := Tmp_Suffix(I);
+         end loop;
+      end if;
+
+      Text_IO.Create(Output_File,
+                     Name =>
+                        "round_" & String(Suffix) & ".ppm"
+                    );
+      Text_IO.Put(Output_File, "P3");
+      Text_IO.Put(Output_File, Natural'Image(Row_Range'Last - Row_Range'First + 1));
+      Text_IO.Put(Output_File, Natural'Image(Col_Range'Last - Col_Range'First + 1));
+      Text_IO.Put(Output_File, " 255"); -- max color
+      Text_IO.New_Line(Output_File);
+
+      for Row in Row_Range loop
+         for Col in Col_Range loop
+            declare Write_Pixel: Pixel
+                  := ( if Map(Row, Col) = Fill_Space then Ash_Pixel
+                       else Elf_Pixel );
+            begin
+               Text_IO.Put(Output_File, Write_Pixel.Red'Image);
+               Text_IO.Put(Output_File, Write_Pixel.Green'Image);
+               Text_IO.Put(Output_File, Write_Pixel.Blue'Image);
+               Text_IO.New_Line(Output_File);
+            end;
+         end loop;
+         Text_IO.New_Line(Output_File);
+      end loop;
+
+      Text_IO.Close(Output_File);
+
+   end Write_Map_As_Ppm;
+
    -- SECTION
    -- PART 1
 
@@ -273,6 +358,9 @@ procedure Main is
             Move_Elf(E);
             Map(E.Row, E.Col) := Fill_Elf;
          end loop;
+
+         if Write_Imagery then Write_Map_As_Ppm(Round); end if;
+         if Compute_Bounds then Put_Elf_Bounds; end if;
 
       end loop;
 
@@ -347,9 +435,6 @@ procedure Main is
             Propose_Move(E, Round);
          end loop;
 
-         -- clear map
-         Map := Clear_Map;
-
          -- check for an end to motion
          if ( for all E of Elves
                => E.Prop_Row = E.Row and then E.Prop_Col = E.Col )
@@ -357,11 +442,17 @@ procedure Main is
             exit;
          end if;
 
+         -- clear map
+         Map := Clear_Map;
+
          -- make moves and draw into map
          for E of Elves loop
             Move_Elf(E);
             Map(E.Row, E.Col) := Fill_Elf;
          end loop;
+
+         if Write_Imagery then Write_Map_As_Ppm(Round); end if;
+         if Compute_Bounds then Put_Elf_Bounds; end if;
 
       end loop;
 
@@ -377,5 +468,11 @@ begin
    Text_IO.Put_Line("number of empty ground tiles is" & Score_Map'Image);
 
    Report_Equilibrium;
+
+   if Compute_Bounds then
+      Text_IO.Put_Line("elf bounds were "
+                    & Min_Row'Image & " " & Min_Col'Image
+                       & Max_Row'Image & Max_Col'Image);
+   end if;
 
 end Main;
