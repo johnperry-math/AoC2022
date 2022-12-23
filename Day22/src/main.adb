@@ -236,8 +236,8 @@ procedure Main is
    --writes the path taken out to a ppm
 
       Output_File  : Text_IO.File_Type;
-      Num_Steps    : Natural := Natural'Max(100, Natural(Path_Taken.Length));
-      Tmp_Suffix   : String := ( if Num_Steps = 100 then " 0000"
+      Num_Steps    : Natural := Natural(Path_Taken.Length);
+      Tmp_Suffix   : String := ( if Num_Steps = 0 then " 0000"
                                  else Num_Steps'Image );
       Suffix       : array (1..6) of Character := ( others => '0' );
 
@@ -245,14 +245,26 @@ procedure Main is
          Red, Green, Blue: Natural;
       end record;
 
-      Space_Value: pixel := ( Red | Green | Blue => Num_Steps * 9 / 10 );
-      Wall_Value : pixel := ( Red | Green | Blue => Num_Steps / 2 );
+      Space_Value: pixel := ( Red | Green | Blue => 224 );
+      Wall_Value : pixel := ( Red | Green | Blue => 128 );
 
       Bad_Coords: exception;
 
+      First_Step_Drawn: Natural
+         := Integer'Max(1, Integer(Path_Taken.Length) - 255);
+      Last_Step_Drawn: Natural := Natural(Path_Taken.Length);
+
    begin
 
-      if Num_Steps < 10_000 then
+      if Num_Steps < 100 then
+         for I in 5..6 loop
+            Suffix(I) := Tmp_Suffix(I - 3);
+         end loop;
+      elsif Num_Steps < 1_000 then
+         for I in 4..6 loop
+            Suffix(I) := Tmp_Suffix(I - 2);
+         end loop;
+      elsif Num_Steps < 10_000 then
          for I in 3..6 loop
             Suffix(I) := Tmp_Suffix(I - 1);
          end loop;
@@ -262,7 +274,7 @@ procedure Main is
          end loop;
       end if;
 
-      Text_IO.Put_Line("printing" & Num_Steps'Image & " " & String(Suffix));
+      --  Text_IO.Put_Line("printing" & Num_Steps'Image & " " & String(Suffix));
 
       Text_IO.Create(Output_File,
                      Name =>
@@ -271,7 +283,7 @@ procedure Main is
       Text_IO.Put(Output_File, "P3");
       Text_IO.Put(Output_File, Map_Cols'Image);
       Text_IO.Put(Output_File, Map_Rows'Image);
-      Text_IO.Put(Output_File, Num_Steps'Image); -- max color
+      Text_IO.Put(Output_File, " 255"); -- max color
       Text_IO.New_Line(Output_File);
 
       declare
@@ -293,23 +305,16 @@ procedure Main is
             end loop;
          end loop;
 
-         for I in 1 .. Natural(Path_Taken.Length) loop
+         for I in First_Step_Drawn .. Last_Step_Drawn loop
             declare
                Pos: Position := Path_Taken(I);
             begin
-               if Raster(Pos.Row, Pos.Col).Red = Num_Steps then
-                  Raster(Pos.Row, Pos.Col).Green := @ + 1;
-               else
-                  Raster(Pos.Row, Pos.Col)
-                     := ( Red => Num_Steps, Green => Num_Steps - I, Blue => 0 );
-               end if;
+               Raster(Pos.Row, Pos.Col)
+                  := ( Red  => 255,
+                       Green => Last_Step_Drawn - I,
+                       Blue  => 0 );
             end;
          end loop;
-
-         if not Path_Taken.Is_Empty then
-            Raster(Path_Taken.Last_Element.Row, Path_Taken.Last_Element.Col)
-               := ( Red => 0, Green => Num_Steps / 2, Blue => Num_Steps );
-         end if;
 
          for Row in 1 .. Map_Rows loop
             for Col in 1 .. Map_Cols loop
@@ -466,7 +471,7 @@ procedure Main is
          end if;
 
          Path_Taken.Append( Position'( Row, Col ) );
-         if Positive(Path_Taken.Length) rem 1000 = 0 then
+         if Positive(Path_Taken.Length) rem 50 = 0 then
             Write_Path_To_Ppm(First);
          end if;
 
@@ -502,7 +507,7 @@ procedure Main is
                -- appending to path handled in Move
          end case;
 
-         if Positive(Path_Taken.Length) rem 1000 = 0 then
+         if Positive(Path_Taken.Length) rem 50 = 0 then
             Write_Path_To_Ppm(First);
          end if;
 
@@ -859,7 +864,7 @@ procedure Main is
 
          Path_Taken.Append( Position'( Row, Col ) );
 
-         if Positive(Path_Taken.Length) rem 1000 = 0 then
+         if Positive(Path_Taken.Length) rem 50 = 0 then
             Write_Path_To_Ppm(Second);
          end if;
 
@@ -894,7 +899,7 @@ procedure Main is
                -- appending to path taken care of by `Move_Cube`
          end case;
          Path_Taken.Append( Position'( Row, Col ) );
-         if Positive(Path_Taken.Length) rem 1000 = 0 then
+         if Positive(Path_Taken.Length) rem 50 = 0 then
             Write_Path_To_Ppm(Second);
          end if;
       end loop;
