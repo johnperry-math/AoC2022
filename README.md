@@ -425,3 +425,5 @@ Now that you've rejoined the elves, cross a valley of blizzards.
 
 Also fun! Too bad I wasted 2+ hours not getting the blizzard logic right,
 but the debugging was relatively straightforward; I was just being dumb.
+
+[<img src="Day24/full_trip.gif" width="976">](Day24/full_trip.gif)

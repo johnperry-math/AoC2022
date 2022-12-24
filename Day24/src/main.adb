@@ -15,6 +15,7 @@ pragma Ada_2022;
 
 with Ada.Text_IO;
 with Ada.Containers.Vectors;
+with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
@@ -30,6 +31,8 @@ procedure Main is
    Doing_Example: constant Boolean := False;
 
    type Part_Number is ( First, Second );
+
+   With_Visualization: constant Boolean := False;
 
    -- SECTION
    -- global types and variables
@@ -68,19 +71,21 @@ procedure Main is
    function Location_Hash(L: Location) return Ada.Containers.Hash_Type is
       ( Ada.Containers.Hash_Type( L.Row * Col_Range'Last + L.Col ) );
 
-   package Location_Sets is new Ada.Containers.Hashed_Sets
-      ( Element_Type        => Location,
+   package Location_Sets is new Ada.Containers.Hashed_Maps
+      ( Key_Type            => Location,
+        Element_Type        => Natural,
         Hash                => Location_Hash,
-        Equivalent_Elements => "="
+        Equivalent_Keys     => "="
        );
 
-   function "="(Left, Right: Location_Sets.Set) return Boolean is
+   function "="(Left, Right: Location_Sets.Map) return Boolean is
       ( Left.Length = Right.Length and then
-           ( for all I of Left => Right.Contains(I) )
+           ( for all Cursor in Left.Iterate =>
+                   Right.Contains(Location_Sets.Key(Cursor)) )
        );
    package Blizzard_Location_Vectors is new Ada.Containers.Vectors
       ( Index_Type  => Positive,
-        Element_Type => Location_Sets.Set
+        Element_Type => Location_Sets.Map
        );
    Blizzard_Locations: Blizzard_Location_Vectors.Vector;
 
@@ -95,7 +100,10 @@ procedure Main is
    type State is record
       Min: Natural;
       Path: Location_Vectors.Vector;
+      Loc : Location;
    end record;
+
+   Empty_State_Vec: Location_Vectors.Vector;
 
    package Queue_Interfaces
    is new Ada.Containers.Synchronized_Queue_Interfaces
@@ -216,11 +224,19 @@ procedure Main is
       end record;
 
       Exped_Pixel: Pixel := ( Red | Blue => 64, Green => 192 );
-      Empty_Pixel: Pixel := ( others => 128 );
+      Empty_Pixel: Pixel := ( others => 255 );
       Wall_Pixel : Pixel := ( others => 0 );
-      Bliz_Pixel : Pixel := ( others => 224 );
 
-      Current_Blizzards: Location_Sets.Set;
+      Bliz_Val   : array( Direction ) of Natural := ( 64, 96, 128, 160 );
+
+      function Bliz_Pixel(I: Positive) return Pixel is
+         ( ( Red => Bliz_Val(Blizzards(I).Dir),
+             Green => Bliz_Val(Blizzards(I).Dir),
+             Blue => Bliz_Val(Blizzards(I).Dir)
+            )
+         );
+
+      Current_Blizzards: Location_Sets.Map;
       Loc: Location;
 
    begin
@@ -254,8 +270,8 @@ procedure Main is
          if Min > 1 then
             Current_Blizzards := Blizzard_Locations(Min - 1);
          else
-            for B of Blizzards loop
-               Current_Blizzards.Include( B.Loc );
+            for I in 1 .. Positive(Blizzards.Length) loop
+               Current_Blizzards.Include( Blizzards(I).Loc, I );
             end loop;
          end if;
 
@@ -274,7 +290,7 @@ procedure Main is
                               else Empty_Pixel )
                           elsif ( Col = 1 or else Col = Col_Range'Last ) then Wall_Pixel
                           elsif Current_Blizzards.Contains( ( Row, Col ) )
-                          then Bliz_Pixel
+                          then Bliz_Pixel( Current_Blizzards( ( Row, Col ) ) )
                           else Empty_Pixel );
                begin
                   Text_IO.Put(Output_File, Write_Pixel.Red'Image);
@@ -318,33 +334,33 @@ procedure Main is
       Row    : Row_Range; -- current location under consideration
       Col    : Col_Range;
 
-      Result : Location_Sets.Set; -- the blizzards' locations; will be stored
+      Result : Location_Sets.Map; -- the blizzards' locations; will be stored
 
    begin
 
-      for B of Blizzards loop
+      for I in 1 .. Positive(Blizzards.Length) loop
 
-         case B.Dir is
+         case Blizzards(I).Dir is
 
             when Up =>
-               Row := ( ( B.Loc.Row - 2 ) - Min_Row + Ht ) rem Ht + 2;
+               Row := ( ( Blizzards(I).Loc.Row - 2 ) - Min_Row + Ht ) rem Ht + 2;
                if Row = 1 then Row := Ht - 1; end if;
-               Result.Include( ( Row, B.Loc.Col ) );
+               Result.Include( ( Row, Blizzards(I).Loc.Col ), I );
 
             when Down =>
-               Row := ( ( B.Loc.Row - 2 + Min_Row ) rem Ht ) + 2;
+               Row := ( ( Blizzards(I).Loc.Row - 2 + Min_Row ) rem Ht ) + 2;
                if Row = 1 then Row := Ht - 1; end if;
-               Result.Include( ( Row, B.Loc.Col ) );
+               Result.Include( ( Row, Blizzards(I).Loc.Col ), I );
 
             when Left =>
-               Col := ( ( B.Loc.Col - 2 ) - Min_Col + Wd ) rem Wd + 2;
+               Col := ( ( Blizzards(I).Loc.Col - 2 ) - Min_Col + Wd ) rem Wd + 2;
                if Col = 1 then Col := Wd - 1; end if;
-               Result.Include( ( B.Loc.Row, Col ) );
+               Result.Include( ( Blizzards(I).Loc.Row, Col ), I );
 
             when Right =>
-               Col := ( ( B.Loc.Col - 2 ) + Min_Col ) rem Wd + 2;
+               Col := ( ( Blizzards(I).Loc.Col - 2 ) + Min_Col ) rem Wd + 2;
                if Col = 1 then Col := Wd - 1; end if;
-               Result.Include( ( B.Loc.Row, Col ) );
+               Result.Include( ( Blizzards(I).Loc.Row, Col ), I );
 
          end case;
 
@@ -355,7 +371,7 @@ procedure Main is
    end Determine_Blizzards_At_Time;
 
    function Minimize_Steps_To_Goal(Q: in out Queues.Queue; Goal: Location)
-                                   return Location_Vectors.Vector
+                                   return State
    is
    -- performs a breadth-first search
    -- to determine the number of steps necessary to reach the requested goal,
@@ -395,8 +411,8 @@ procedure Main is
             Q.Dequeue(S);
 
             -- "are we there yet?"
-            if S.Path.Last_Element = Goal then
-               return S.Path;
+            if S.Loc = Goal then
+               return S;
             end if;
 
             -- make sure our blizzard cache works here
@@ -406,14 +422,13 @@ procedure Main is
 
             -- check all neighboring locations
             for Row in
-               S.Path.Last_Element.Row - 1 .. S.Path.Last_Element.Row + 1
+               S.Loc.Row - 1 .. S.Loc.Row + 1
             loop
                for Col in
-                  S.Path.Last_Element.Col - 1 .. S.Path.Last_Element.Col + 1
+                  S.Loc.Col - 1 .. S.Loc.Col + 1
                loop
 
-                  if ( Row = S.Path.Last_Element.Row
-                        or else Col = S.Path.Last_Element.Col )
+                  if ( Row = S.Loc.Row or else Col = S.Loc.Col )
                      and then Valid_Location(Row, Col)
                      and then
                         not Blizzard_Locations(S.Min + 1).Contains( (Row, Col) )
@@ -421,10 +436,15 @@ procedure Main is
                         not Explored_States.Contains
                            ( ( S.Min + 1, ( Row, Col ) ) )
                   then
-                     New_Path := Location_Vectors.Copy(S.Path);
-                     New_Path.Append( Location'( Row, Col ) );
-                     Q.Enqueue( ( S.Min + 1, New_Path ) );
-                     Explored_States.Include( ( S.Min + 1, ( Row, Col ) ) );
+                     if With_Visualization then
+                        New_Path := Location_Vectors.Copy(S.Path);
+                        New_Path.Append( Location'( Row, Col ) );
+                        Q.Enqueue( ( S.Min + 1, New_Path, ( Row, Col ) ) );
+                        Explored_States.Include( ( S.Min + 1, ( Row, Col ) ) );
+                     else
+                        Q.Enqueue( ( S.Min + 1, Empty_State_Vec, ( Row, Col ) ) );
+                        Explored_States.Include( ( S.Min + 1, ( Row, Col ) ) );
+                     end if;
                   end if;
 
                end loop;
@@ -439,7 +459,7 @@ procedure Main is
    -- SUBSECTION
    -- PART 1
 
-   function Minutes_To_Extraction_Point return Location_Vectors.Vector is
+   function Minutes_To_Extraction_Point return State is
    -- how long will it take to cross the valley from the start
    -- to the extraction point?
 
@@ -451,7 +471,7 @@ procedure Main is
    begin
 
       Path.Append( Location'( 1, 2 ) );
-      Q.Enqueue( ( 0, Path ) );
+      Q.Enqueue( ( 0, Path, ( 1, 2 ) ) );
       return Minimize_Steps_To_Goal(Q, Goal);
 
    end Minutes_To_Extraction_Point;
@@ -459,9 +479,9 @@ procedure Main is
    -- SUBSECTION
    -- PART 2
 
-   Part_1_Result: Location_Vectors.Vector;
+   Part_1_Result: State;
 
-   function Time_To_Recover_Snacks return Location_Vectors.Vector is
+   function Time_To_Recover_Snacks return State is
    -- how long will it take to do part 1, then return back,
    -- then cross the valley again?
 
@@ -470,38 +490,38 @@ procedure Main is
       First_Goal: Location := ( 1, 2 );
       Second_Goal: Location := ( Row_Range'Last, Col_Range'Last - 1 );
 
-      Result: Location_Vectors.Vector;
+      Result: State;
 
    begin
 
-      Q.Enqueue( ( Natural(Part_1_Result.Length) - 1, Part_1_Result ) );
+      Q.Enqueue( ( Part_1_Result.Min, Part_1_Result.Path, Part_1_Result.Loc ) );
       Result := Minimize_Steps_To_Goal(Q, First_Goal);
 
-      R.Enqueue( ( Natural(Result.Length) - 1, Result ) );
+      R.Enqueue( ( Result.Min, Result.Path, Result.Loc ) );
       Result := Minimize_Steps_To_Goal(R, Second_Goal);
 
       return Result;
 
    end Time_To_Recover_Snacks;
 
-   Part_2_Result: Location_Vectors.Vector;
+   Part_2_Result: State;
 
 begin
 
    Read_Input;
 
    Part_1_Result := Minutes_To_Extraction_Point;
-   Text_IO.Put_Line("at least"
-                    & Natural'Image(Positive(Part_1_Result.Length) - 1)
+   Text_IO.Put_Line("at least" & Part_1_Result.Min'Image
                     & " minutes to the extraction point!");
 
    Part_2_Result := Time_To_Recover_Snacks;
-   Text_IO.Put_Line("at least"
-                    & Natural'Image(Positive(Part_2_Result.Length) - 1)
+   Text_IO.Put_Line("at least" & Part_2_Result.Min'Image
                     & " minutes to reach goal, return to start,"
                     & " then return to goal!");
 
-   Text_IO.Put_Line("writing images");
-   Write_State_As_Ppm(Part_2_Result);
+   if With_Visualization then
+      Text_IO.Put_Line("writing images");
+      Write_State_As_Ppm(Part_2_Result.Path);
+   end if;
 
 end Main;
