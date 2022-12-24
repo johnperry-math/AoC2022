@@ -413,3 +413,15 @@ The visualization is quite interesting
 but the file is unfortunately large: close to 4MB.
 
 [<img src="Day23/part2.gif">](Day23/part2.gif)
+
+## Day 24: Blizzard Basin
+
+Now that you've rejoined the elves, cross a valley of blizzards.
+
+1. Find the minimum time it will take to cross the valley.
+2. One of the more absent-minded elves forgot its snacks.
+   Find the minimum time it will take to cross the valley,
+   return to pick up the snacks, then cross the valley again.
+
+Also fun! Too bad I wasted 2+ hours not getting the blizzard logic right,
+but the debugging was relatively straightforward; I was just being dumb.
