@@ -427,3 +427,11 @@ Also fun! Too bad I wasted 2+ hours not getting the blizzard logic right,
 but the debugging was relatively straightforward; I was just being dumb.
 
 [<img src="Day24/full_trip.gif" width="976">](Day24/full_trip.gif)
+
+## Day 25: Full of Hot Air
+
+SNAFU numbers: Roman numerals under a different name.
+
+1. Sum the input SNAFU-represented numbers and
+   return result in SNAFU representation.
+2. Freebie, as usuall on Day 25.

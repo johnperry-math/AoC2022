@@ -1,0 +1,5 @@
+project Full_Of_Hot_Air is
+    for Source_Dirs use ("src");
+    for Object_Dir use "obj";
+    for Main use ("main.adb");
+end Full_Of_Hot_Air;
